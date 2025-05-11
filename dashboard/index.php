@@ -69,12 +69,18 @@ $data = mysqli_fetch_array($query);
 		============================================ -->
     <link rel="stylesheet" href="css/calendar/fullcalendar.min.css">
     <link rel="stylesheet" href="css/calendar/fullcalendar.print.min.css">
-    <!-- style CSS
+    <!-- Style CSS
 		============================================ -->
     <link rel="stylesheet" href="style.css">
-    <!-- responsive CSS
+    <!-- Responsive CSS
 		============================================ -->
     <link rel="stylesheet" href="css/responsive.css">
+    <!-- Custom Style Sidebar CSS
+		============================================ -->    
+    <link rel="stylesheet" href="css/custom-style-sidebar.css">
+    <!-- Custom Style Sidebar Fixed CSS
+		============================================ -->
+    <link rel="stylesheet" href="css/custom-style-sidebar-fixed.css">
     <!-- modernizr JS
 		============================================ -->
     <script src="js/vendor/modernizr-2.8.3.min.js"></script>
@@ -89,7 +95,6 @@ $data = mysqli_fetch_array($query);
             <nav id="sidebar" class="">
                 <div class="sidebar-header">
                     <a href="index.php"><img class="main-logo" src="img/logo/palw.png" alt="" /></a>
-                    <strong><img src="img/logo/logos.png" alt=""></strong>
                 </div>
                 <div class="nalika-profile">
                     <div class="profile-dtl">
@@ -106,32 +111,16 @@ $data = mysqli_fetch_array($query);
                 </div>
                 <div class="left-custom-menu-adp-wrap comment-scrollbar">
                     <nav class="sidebar-nav left-sidebar-menu-pro">
-                        <ul class="metismenu" id="menu1">
-                            <li class="active">
-                                <a class="nav-link" href="index.html">
-                                    <i class="icon nalika-home icon-wrap"></i>
-                                    <span class="mini-click-non">Dashboard</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="enkripsi.php" aria-expanded="false"><i class="icon nalika-unlocked icon-wrap"></i> <span class="mini-click-non">Enkripsi</span></a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="dekripsi.php" aria-expanded="false"><i class="icon nalika-unlocked icon-wrap"></i> <span class="mini-click-non">Dekripsi</span></a>
-                            </li>
-                        </ul>
-                    </nav>
+                    <?php include('sidebar-nav-universal.php'); ?>
                 </div>
             </nav>
+            
         </div>
     <!-- Start Welcome area -->
     <div class="all-content-wrapper">
         <div class="container-fluid">
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                    <div class="logo-pro">
-                        <a href="index.html"><img class="main-logo" src="img/logo/logo.png" alt="" /></a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -165,7 +154,8 @@ $data = mysqli_fetch_array($query);
                                                 <li class="nav-item">
                                                     <a href="logout.php"> Log Out</a>
                                                 </li>
-                                            </ul>
+
+</ul>
                                         </div>
                                     </div>
                                 </div>
@@ -174,6 +164,8 @@ $data = mysqli_fetch_array($query);
                     </div>
                 </div>
             </div>
+
+            
         <div class="section-admin container-fluid">
             <div class="row admin text-center">
                 <div class="col-md-12">
@@ -236,7 +228,55 @@ $data = mysqli_fetch_array($query);
                 </div>
             </div>
         </div>
-        <section class="breadcome-list">
+
+<section class="breadcome-list mt-5">
+  <div class="card bg-dark text-dark">
+    <div class="card-body">
+      <h4 class="text-info">Comparative Analysis of AES-128 and AES-256</h4>
+      <div class="table-responsive mt-3">
+        <table class="table table-bordered text-dark">
+          <thead style="background-color:#e9ecef;">
+            <tr>
+              <th>#</th>
+              <th>Nama File</th>
+              <th>Algoritma</th>
+              <th>Ukuran (KB)</th>
+              <th>Waktu Proses (ms)</th>
+              <th>Jenis Operasi</th>
+              <th>SHA-256 Hash</th>
+              <th>Tanggal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            $queryAES = "SELECT * FROM file WHERE alg_used IS NOT NULL ORDER BY tgl_upload DESC";
+            $resultAES = mysqli_query($connect, $queryAES);
+            $no = 1;
+            if (mysqli_num_rows($resultAES) === 0) {
+      echo "<tr><td colspan='8' class='text-center text-muted'>Belum ada data analisis AES yang tersedia.</td></tr>";
+    }
+    while ($rowAES = mysqli_fetch_assoc($resultAES)) {
+              echo "<tr>
+                      <td>{$no}</td>
+                      <td>" . htmlspecialchars($rowAES['file_name_source']) . "</td>
+                      <td>" . htmlspecialchars($rowAES['alg_used']) . "</td>
+                      <td>" . round($rowAES['file_size'], 2) . "</td>
+                      <td>" . $rowAES['process_time_ms'] . "</td>
+                      <td>" . ucfirst($rowAES['operation_type']) . "</td>
+                      <td style='font-size: 0.8rem;'>" . substr($rowAES['hash_check'], 0, 12) . "...</td>
+                      <td>" . date('Y-m-d H:i', strtotime($rowAES['tgl_upload'])) . "</td>
+                    </tr>";
+              $no++;
+            }
+            ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+        <section class="breadcome-list section-file-table">
         <div class="card">
             <div class="card-body">
               <div class="table-responsive" style="color:#fff;">
@@ -278,7 +318,8 @@ $data = mysqli_fetch_array($query);
                 </table>
             </div>
           </div>
-        </section> 
+        </section>
+ 
     </div>
     <!-- jquery
 		============================================ -->
