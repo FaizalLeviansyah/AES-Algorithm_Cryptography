@@ -16,26 +16,5 @@
   margin-top: 10px !important;
 }
 
-/* Highlight menu aktif */
-.metismenu li.active > a {
-  background-color: #16233c !important;
-  color: #00d0ff !important;
-}
-
-/* Hover effect */
-.metismenu li a:hover {
-  background-color: #0f1a2e !important;
-  color: #00c8ff !important;
-}
-
-/* Fix overlay scroll layer dari mCustomScrollbar */
-.left-custom-menu-adp-wrap .mCustomScrollBox {
-  background: none !important;
-  height: auto !important;
-  max-height: 100% !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}
-
 
 
