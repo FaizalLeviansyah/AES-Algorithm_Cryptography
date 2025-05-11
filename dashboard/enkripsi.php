@@ -75,6 +75,12 @@ $data = mysqli_fetch_array($query);
     <!-- responsive CSS
 		============================================ -->
     <link rel="stylesheet" href="css/responsive.css">
+    <!-- Custom Style Sidebar CSS
+		============================================ -->    
+    <link rel="stylesheet" href="css/custom-style-sidebar.css">
+    <!-- Custom Style Sidebar Fixed CSS
+		============================================ -->
+    <link rel="stylesheet" href="css/custom-style-sidebar-fixed.css">
     <!-- modernizr JS
 		============================================ -->
     <script src="js/vendor/modernizr-2.8.3.min.js"></script>
@@ -88,7 +94,7 @@ $data = mysqli_fetch_array($query);
         <div class="left-sidebar-pro">
             <nav id="sidebar" class="">
                 <div class="sidebar-header">
-                    <a href="index.html"><img class="main-logo" src="img/logo/logosn.png" alt="" /></a>
+                    <a href="index.php"><img class="main-logo" src="img/logo/palw.png" alt="" /></a>
                     <strong><img src="img/logo/logos.png" alt=""></strong>
                 </div>
                 <div class="nalika-profile">
@@ -106,21 +112,8 @@ $data = mysqli_fetch_array($query);
                 </div>
                 <div class="left-custom-menu-adp-wrap comment-scrollbar">
                     <nav class="sidebar-nav left-sidebar-menu-pro">
-                        <ul class="metismenu" id="menu1">
-                            <li class="active">
-                                <a class="nav-link" href="index.php">
-                                    <i class="icon nalika-home icon-wrap"></i>
-                                    <span class="mini-click-non">Dashboard</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="enkripsi.php" aria-expanded="false"><i class="icon nalika-unlocked icon-wrap"></i> <span class="mini-click-non">Enkripsi</span></a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="dekripsi.php" aria-expanded="false"><i class="icon nalika-unlocked icon-wrap"></i> <span class="mini-click-non">Dekripsi</span></a>
-                            </li>
-                        </ul>
-                    </nav>
+                        <?php include('sidebar-nav-universal.php'); ?>
+                    </div>
                 </div>
             </nav>
         </div>
@@ -129,9 +122,6 @@ $data = mysqli_fetch_array($query);
         <div class="container-fluid">
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                    <div class="logo-pro">
-                        <a href="index.html"><img class="main-logo" src="img/logo/logo.png" alt="" /></a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -155,7 +145,8 @@ $data = mysqli_fetch_array($query);
                                             <form role="search" class="">
                                               <input type="text" placeholder="Search..." class="form-control">
                                               <a href=""><i class="fa fa-search"></i></a>
-                                            </form>
+
+</form>
                                           </div>
                                         </div>
                                     </div>
@@ -224,7 +215,14 @@ $data = mysqli_fetch_array($query);
                           </div>
                         </div>
                       </fieldset>
-                    </form>
+                      <div class="form-group">
+    <label for="algorithm">Pilih Algoritma</label>
+    <select class="form-control" name="algorithm" required>
+      <option value="AES-128">AES-128</option>
+      <option value="AES-256">AES-256</option>
+    </select>
+  </div>
+</form>
               </div>
             </div>
           </div>
