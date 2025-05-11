@@ -19,7 +19,7 @@ $data = mysqli_fetch_array($query);
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>File Enkripsi & Dekripsi RSA</title>
+    <title>File Enkripsi & Dekripsi AES</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- favicon
@@ -108,7 +108,7 @@ $data = mysqli_fetch_array($query);
                     <nav class="sidebar-nav left-sidebar-menu-pro">
                         <ul class="metismenu" id="menu1">
                             <li class="active">
-                                <a class="nav-link" href="index.php">
+                                <a class="nav-link" href="index.html">
                                     <i class="icon nalika-home icon-wrap"></i>
                                     <span class="mini-click-non">Dashboard</span>
                                 </a>
@@ -130,7 +130,7 @@ $data = mysqli_fetch_array($query);
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="logo-pro">
-                        <a href="index.php"><img class="main-logo" src="img/logo/logo.png" alt="" /></a>
+                        <a href="index.html"><img class="main-logo" src="img/logo/logo.png" alt="" /></a>
                     </div>
                 </div>
             </div>
@@ -195,7 +195,7 @@ $data = mysqli_fetch_array($query);
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> 
                         <div class="col-lg-4 col-md-3 col-sm-3 col-xs-12" style="margin-bottom:1px;">
                         <br><br>
                             <div class="admin-content analysis-progrebar-ctn res-mg-t-30">
@@ -264,7 +264,7 @@ $data = mysqli_fetch_array($query);
                           <td><?php echo $data['file_size']; ?> KB</td>
                           <td><?php echo $data['tgl_upload']; ?></td>
                           <td><?php if ($data['status'] == 1) {
-                            echo "<a href='download.php?file=" . urlencode($data['file_url']) . "' class='btn btn-danger'>Unduh file enkripsi</a>";
+                            echo "<span class='btn btn-danger'>Terenkripsi</span>";
                           }elseif ($data['status'] == 2) {
                             echo "<span class='btn btn-success'>Sudah Didekripsi</span>";
                           }else {

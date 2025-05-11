@@ -43,7 +43,7 @@ $data = mysqli_fetch_array($query);
             </ul>
           </div>
         </nav>
-      </header>
+</header>
       <aside class="main-sidebar hidden-print">
         <section class="sidebar">
           <div class="user-panel">
@@ -62,6 +62,7 @@ $data = mysqli_fetch_array($query);
           </ul>
         </section>
       </aside>
+      
       <div class="content-wrapper">
         <div class="page-title">
           <div>

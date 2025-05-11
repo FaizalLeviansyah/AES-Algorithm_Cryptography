@@ -40,7 +40,6 @@
 					array(0xA0, 0xE0, 0x3B, 0x4D, 0xAE, 0x2A, 0xF5, 0xB0, 0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53, 0x99, 0x61),
 					array(0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D)
 				);
-		
         // Log table based on 0xe5
         var $ltable = array(
                 0x00, 0xff, 0xc8, 0x08, 0x91, 0x10, 0xd0, 0x36,
@@ -241,21 +240,19 @@
 					$y = $x++;
 					
 					$this->state[$i][$y] = $this->state[$i][$y] ^ $this->w[$i][$j];
-					
 				}
 			}				
 			
 			for ($i=0; $i<$this->Nr-1; $i++) {
 			
 				$this->state = $this->InvShiftRow($this->state);
-				
+
 				$this->state = $this->InvSubByte($this->state);
 				
 				$this->pos_w = ($this->pos_w)- $this->Nb;
 				$this->state = $this->AddRoundKey($this->state);
 				
-				$this->state = $this->InvMixColumns($this->state);
-			
+				$this->state = $this->InvMixColumns($this->state);			
 			}
 					
 			$this->state = $this->InvShiftRow($this->state);
@@ -264,7 +261,8 @@
 			
 			$this->pos_w = ($this->pos_w)- $this->Nb;
 			$this->state = $this->AddRoundKey($this->state);
-			
+		
+
 			$plain = "";
 			foreach($this->state as $state) {
 				foreach($state as $data) {

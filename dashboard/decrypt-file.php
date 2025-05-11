@@ -89,7 +89,7 @@ $data = mysqli_fetch_array($query);
         <div class="left-sidebar-pro">
             <nav id="sidebar" class="">
                 <div class="sidebar-header">
-                    <a href="index.php"><img class="main-logo" src="img/logo/palw.png" alt="" /></a>
+                    <a href="index.html"><img class="main-logo" src="img/logo/logosn.png" alt="" /></a>
                     <strong><img src="img/logo/logos.png" alt=""></strong>
                 </div>
                 <div class="nalika-profile">
@@ -131,7 +131,7 @@ $data = mysqli_fetch_array($query);
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="logo-pro">
-                        <a href="index.php"><img class="main-logo" src="img/logo/logo.png" alt="" /></a>
+                        <a href="index.html"><img class="main-logo" src="img/logo/logo.png" alt="" /></a>
                     </div>
                 </div>
             </div>
@@ -159,6 +159,16 @@ $data = mysqli_fetch_array($query);
                                             </form>
                                           </div>
                                         </div>
+                                    </div>
+                                    <div class="col-lg-6 col-md-7 col-sm-6 col-xs-12">
+                                      <div class="header-top-menu tabl-d-n hd-search-rp">
+                                        <div class="breadcome-heading">
+                                            <form role="search" class="">
+                                              <input type="text" placeholder="Search..." class="form-control">
+                                              <a href=""><i class="fa fa-search"></i></a>
+                                            </form>
+                                        </div>
+                                      </div>
                                     </div>
                                     <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
                                         <div class="header-right-info">
