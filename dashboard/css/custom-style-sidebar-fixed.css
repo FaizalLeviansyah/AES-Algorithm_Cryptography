@@ -16,5 +16,21 @@
   margin-top: 10px !important;
 }
 
+/* Tambah jarak antar konten utama dengan header */
+.all-content-wrapper .section-admin,
+.all-content-wrapper .breadcome-list {
+  margin-top: 80px !important;
+}
 
+/* Opsional: Jika ingin table lebih "bernapas" */
+.table {
+  margin-top: 5px;
+}
 
+  .breadcome-list.mt-5 {
+    margin-top: 2rem !important;  /* atau 24px */
+  }
+
+    .section-file-table {
+    margin-top: 2rem; /* atau 32px */
+  }
