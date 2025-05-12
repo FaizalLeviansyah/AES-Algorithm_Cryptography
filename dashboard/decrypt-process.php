@@ -1,69 +1,49 @@
 <?php
 session_start();
-include "../config.php";   //memasukan koneksi
-include "AES.php"; //memasukan file AES
+include "../config.php";
 
-$idfile    = mysqli_escape_string($connect,$_POST['fileid']);
-$pwdfile   = mysqli_escape_string($connect,substr(md5($_POST["pwdfile"]), 0,16));
-$query     = "SELECT password FROM file WHERE id_file='$idfile' AND password='$pwdfile'";
-$sql       = mysqli_query($connect,$query);
-if(mysqli_num_rows($sql)>0){
-    $query1     = "SELECT * FROM file WHERE id_file='$idfile'";
-    $sql1       = mysqli_query($connect,$query1);
-    $data       = mysqli_fetch_assoc($sql1);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $idfile   = mysqli_real_escape_string($connect, $_POST['fileid']);
+    $password = $_POST['pwdfile'];
 
-    $file_path  = $data["file_url"];
-    $key        = $data["password"];
-    $file_name  = $data["file_name_source"];
-    $size       = $data["file_size"];
+    $sql = "SELECT * FROM file WHERE id_file = '$idfile'";
+    $result = mysqli_query($connect, $sql) or die(mysqli_error($connect));
 
-    $file_size  = filesize($file_path);
-
-
-    $query2     = "UPDATE file SET status= '2' WHERE id_file = '$idfile'";
-    $sql2       = mysqli_query($connect, $query2);
-    
-    $mod        = $file_size%16;
-
-    $aes        = new AES($key);
-    $fopen1     = fopen($file_path, "rb");
-    $plain      = "";
-    $cache      = "hasil_dekripsi/$file_name";
-    $fopen2     = fopen($cache, "wb");
- 
-
-    if($mod==0){
-    $banyak = $file_size / 16;
-     }else{
-    $banyak = ($file_size - $mod) / 16;
-    $banyak = $banyak+1;
+    if (mysqli_num_rows($result) === 0) {
+        echo "<script>alert('File tidak ditemukan.'); window.location.href='dekripsi.php';</script>";
+        exit();
     }
 
-    // $file_path = $data["file_url"];
-    // $key       = $data["password"];
-    // $file_name = $data["file_name_source"];
-    // $size      = $data["file_size"];
+    $data = mysqli_fetch_assoc($result);
 
-    ini_set('max_execution_time', -1);
-    ini_set('memory_limit', -1);
-    for($bawah=0;$bawah<$banyak;$bawah++){
+    $key128   = substr(hash('sha256', $password), 0, 16);
+    $key256   = substr(hash('sha256', $password), 0, 32);
+    $cipher   = $data['alg_used'] === 'AES-256' ? 'AES-256-ECB' : 'AES-128-ECB';
+    $key      = $data['alg_used'] === 'AES-256' ? $key256 : $key128;
+    $enc_path = 'hasil_ekripsi/' . $data['file_name_finish'];
+    $file_name = $data['file_name_source'];
+    $original_hash = $data['hash_check'];
 
-      $filedata    = fread($fopen1, 16);
-      $plain       = $aes->decrypt($filedata);
-      fwrite($fopen2, $plain);
-   }
-   $_SESSION["download"] = $cache;
+    $encrypted_data = file_get_contents($enc_path);
+    $start_time = microtime(true);
 
-   echo("<script language='javascript'>
-       window.open('download.php', '_blank');
-       window.location.href='dekripsi.php';
-       window.alert('Berhasil mendekripsi file.');
-       </script>
-       ");
-}else{
- echo("<script language='javascript'>
-    window.location.href='decrypt-file.php?id_file=$idfile';
-    window.alert('Maaf, Password tidak sesuai.');
-    </script>");
-} 
+    $decrypted = openssl_decrypt($encrypted_data, $cipher, $key, OPENSSL_RAW_DATA);
+    $duration_ms = round((microtime(true) - $start_time) * 1000, 3);
+
+    // Check SHA-256 hash
+    $current_hash = hash('sha256', $decrypted);
+    if ($original_hash !== $current_hash) {
+        echo "<script>alert('Password salah atau file rusak.'); window.location.href='dekripsi.php';</script>";
+        exit();
+    }
+
+    // Save decrypted file
+    $save_path = 'hasil_dekripsi/' . $file_name;
+    file_put_contents($save_path, $decrypted);
+
+    $update = "UPDATE file SET status = '2', operation_type = 'decrypt' WHERE id_file = '$idfile'";
+    mysqli_query($connect, $update);
+
+    echo "<script>alert('File berhasil didekripsi!'); window.location.href='dekripsi.php';</script>";
+}
 ?>

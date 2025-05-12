@@ -1,88 +1,52 @@
 <?php
 session_start();
-include "../config.php";   //memasukan koneksi
-include "AES.php"; //memasukan file AES
+include "../config.php";
 
-  if (isset($_POST['encrypt_now'])) {
-      $user 		 = $_SESSION['username'];
-      $key		   = mysqli_escape_string($connect,substr(md5($_POST["pwdfile"]), 0,16));
-      $deskripsi = mysqli_escape_string($connect,$_POST['desc']);
+if (isset($_POST['encrypt_now'])) {
+    $user       = $_SESSION['username'];
+    $password   = $_POST["pwdfile"];
+    $key128     = substr(hash('sha256', $password), 0, 16);
+    $key256     = substr(hash('sha256', $password), 0, 32);
+    $desc       = mysqli_real_escape_string($connect, $_POST['desc']);
+    $alg_used   = $_POST['algorithm']; // expected value: AES-128 or AES-256
 
-      $file_tmpname   = $_FILES['file']['tmp_name'];
-      //untuk nama file url
-      $file           = rand(1000,100000)."-".$_FILES['file']['name'];
-      $new_file_name  = strtolower($file);
-      $final_file     = str_replace(' ','-',$new_file_name);
-      //untuk nama file
-      $filename       = rand(1000,100000)."-".pathinfo($_FILES['file']['name'], PATHINFO_FILENAME);
-      $new_filename  = strtolower($filename);
-      $finalfile     = str_replace(' ','-',$new_filename);
-      $size           = filesize($file_tmpname);
-      $size2          = (filesize($file_tmpname))/1024;
-      $info           = pathinfo($final_file );
-      $file_source		= fopen($file_tmpname, 'rb');
-      $ext            = $info["extension"];
+    $file_tmp   = $_FILES['file']['tmp_name'];
+    $file_name  = rand(1000,100000)."-".$_FILES['file']['name'];
+    $final_name = strtolower(str_replace(' ', '-', $file_name));
+    $file_size  = filesize($file_tmp);
+    $size_kb    = $file_size / 1024;
+    $file_ext   = pathinfo($final_name, PATHINFO_EXTENSION);
 
-    if( $ext=="txt" || $ext=="docx" || $ext=="pptx"){
-    }else{
-        echo("<script language='javascript'>
-        window.location.href='encrypt.php';
-        window.alert('Maaf, file yang bisa dienkrip hanya word, excel, text, ppt ataupun pdf.');
-        </script>");
+    if (!in_array($file_ext, ['txt', 'docx', 'pptx', 'pdf'])) {
+        echo "<script>alert('File format tidak didukung!'); window.location.href='encrypt.php';</script>";
+        exit();
+    }
+    if ($size_kb > 3084) {
+        echo "<script>alert('Ukuran file terlalu besar!'); window.location.href='encrypt.php';</script>";
         exit();
     }
 
-    if($size2>3084){
-        echo("<script language='javascript'>
-        window.location.href='home.php?encrypt';
-        window.alert('Maaf, file tidak bisa lebih besar dari 3MB.');
-        </script>");
-        exit();
+    $plaintext   = file_get_contents($file_tmp);
+    $start_time  = microtime(true);
+
+    $cipher      = 'AES-128-ECB';
+    $key         = $key128;
+    if ($alg_used === 'AES-256') {
+        $cipher  = 'AES-256-ECB';
+        $key     = $key256;
     }
 
-    $sql1   = "INSERT INTO file VALUES ('', '$user', '$final_file', '$finalfile.rda', '', '$size2', '$key', now(), '1', '$deskripsi')";
-    $query1  = mysqli_query($connect,$sql1) or die(mysqli_error($connect));
+    $encrypted   = openssl_encrypt($plaintext, $cipher, $key, OPENSSL_RAW_DATA);
+    $duration_ms = round((microtime(true) - $start_time) * 1000, 3);
+    $hash        = hash('sha256', $plaintext);
 
-    $sql2   = "select * from file where file_url =''";
-    $query2  = mysqli_query($connect,$sql2) or die(mysqli_error($connect));
+    $save_path = 'hasil_ekripsi/' . pathinfo($final_name, PATHINFO_FILENAME) . '.rda';
+    file_put_contents($save_path, $encrypted);
 
-    $url   = $finalfile.".rda";
-    $file_url = "hasil_ekripsi/$url";
+    $sql = "INSERT INTO file (username, file_name_source, file_name_finish, file_url, file_size, password, alg_used, process_time_ms, operation_type, hash_check, tgl_upload, status, keterangan)
+            VALUES ('$user', '$final_name', '".basename($save_path)."', '$save_path', '$size_kb', '$key', '$alg_used', '$duration_ms', 'encrypt', '$hash', now(), '1', '$desc')";
+    mysqli_query($connect, $sql) or die(mysqli_error($connect));
 
-    $sql3   = "UPDATE file SET file_url ='$file_url' WHERE file_url=''";
-    $query3  = mysqli_query($connect,$sql3) or die(mysqli_error($connect));
-
-    $file_output		= fopen($file_url, 'wb');
-
-    $mod    = $size%16;
-    if($mod==0){
-        $banyak = $size / 16;
-    }else{
-        $banyak = ($size - $mod) / 16;
-        $banyak = $banyak+1;
-    }
-
-    if(is_uploaded_file($file_tmpname)){
-        ini_set('max_execution_time', -1);
-        ini_set('memory_limit', -1);
-        $aes = new AES($key);
-
-       for($bawah=0;$bawah<$banyak;$bawah++){
-           $data    = fread($file_source, 16);
-           $cipher  = $aes->encrypt($data);
-           fwrite($file_output, $cipher);
-       }
-       fclose($file_source);
-       fclose($file_output);
-
-       echo("<script language='javascript'>
-        window.location.href='enkripsi.php';
-        window.alert('Enkripsi Berhasil..');
-        </script>");
-    }else{
-       echo("<script language='javascript'>
-        window.location.href='enkripsi.php';
-        window.alert('Encrypt file mengalami masalah..');
-        </script>");
-    }
+    echo "<script>alert('File berhasil dienkripsi!'); window.location.href='enkripsi.php';</script>";
 }
+?>
