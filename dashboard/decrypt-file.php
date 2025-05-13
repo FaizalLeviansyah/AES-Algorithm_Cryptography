@@ -172,6 +172,10 @@ $data = mysqli_fetch_array($query);
                                     </div>
                                     <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
                                         <div class="header-right-info">
+                                          <button id="toggle-theme" class="btn btn-sm btn-outline-secondary" style="margin-right: 10px;">
+  Light Mode
+</button>
+
                                             <ul class="nav navbar-nav mai-top-nav header-right-menu">                                                      
                                                 <li class="nav-item">
                                                     <a href="logout.php"> Log Out</a>

@@ -84,39 +84,64 @@ $data = mysqli_fetch_array($query);
     <!-- modernizr JS
 		============================================ -->
     <script src="js/vendor/modernizr-2.8.3.min.js"></script>
+    <link rel="stylesheet" href="css/light-mode.css" id="theme-style">
 </head>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById('toggle-theme');
+    const themeLink = document.getElementById('theme-style');
+
+    if (!toggleBtn || !themeLink) return;
+
+    // Load state from localStorage
+    const isLight = localStorage.getItem('theme') === 'light';
+    setTheme(isLight);
+
+    toggleBtn.addEventListener('click', function () {
+      const isCurrentlyLight = themeLink.getAttribute('href').includes('light-mode.css');
+      setTheme(!isCurrentlyLight);
+    });
+
+    function setTheme(useLight) {
+      themeLink.setAttribute('href', useLight ? 'css/light-mode.css' : '');
+      toggleBtn.textContent = useLight ? 'Dark Mode' : 'Light Mode';
+      localStorage.setItem('theme', useLight ? 'light' : 'dark');
+    }
+  });
+</script>
 
 <body>
     <!--[if lt IE 8]>
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
 
-        <div class="left-sidebar-pro">
-            <nav id="sidebar" class="">
-                <div class="sidebar-header">
-                    <a href="index.php"><img class="main-logo" src="img/logo/palw.png" alt="" /></a>
-                    <strong><img src="img/logo/logos.png" alt=""></strong>
-                </div>
-                <div class="nalika-profile">
-                    <div class="profile-dtl">
-                        <a href="#"><img src="https://lh3.googleusercontent.com/ogw/ADGmqu-5A4r40ZPotQWqRs5qBqjF1pxruJuJs5TURuzdZw=s83-c-mo" alt="" /></a>
-                        <h2><?php echo $data['fullname']; ?><p class="designation icon" style="color:green;"><?php echo $data['job_title']; ?></p></h2>
-                    </div>
-                    <div class="profile-social-dtl">
-                        <ul class="dtl-social">
-                            <li><a href="#"><i class="icon nalika-facebook"></i></a></li>
-                            <li><a href="#"><i class="icon nalika-twitter"></i></a></li>
-                            <li><a href="#"><i class="icon nalika-linkedin"></i></a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="left-custom-menu-adp-wrap comment-scrollbar">
-                    <nav class="sidebar-nav left-sidebar-menu-pro">
-                        <?php include('sidebar-nav-universal.php'); ?>
-                    </div>
-                </div>
-            </nav>
-        </div>
+<div class="left-sidebar-pro">
+  <nav id="sidebar" class="">
+    <div class="sidebar-header">
+      <a href="index.php"><img class="main-logo" src="img/logo/palw.png" alt="" /></a>
+    </div>
+    <div class="nalika-profile">
+      <div class="profile-dtl">
+        <a href="#"><img src="https://lh3.googleusercontent.com/ogw/ADGmqu-5A4r40ZPotQWqRs5qBqjF1pxruJuJs5TURuzdZw=s83-c-mo" alt="" /></a>
+        <h2><?php echo $data['fullname']; ?><p class="designation icon" style="color:green;"><?php echo $data['job_title']; ?></p></h2>
+      </div>
+      <div class="profile-social-dtl">
+        <ul class="dtl-social">
+          <li><a href="#"><i class="icon nalika-facebook"></i></a></li>
+          <li><a href="#"><i class="icon nalika-twitter"></i></a></li>
+          <li><a href="#"><i class="icon nalika-linkedin"></i></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="left-custom-menu-adp-wrap comment-scrollbar">
+      <nav class="sidebar-nav left-sidebar-menu-pro">
+        <?php include('sidebar-nav-universal.php'); ?>
+      </nav>
+    </div>
+  </nav>
+</div>
+
     <!-- Start Welcome area -->
     <div class="all-content-wrapper">
         <div class="container-fluid">
@@ -145,13 +170,16 @@ $data = mysqli_fetch_array($query);
                                             <form role="search" class="">
                                               <input type="text" placeholder="Search..." class="form-control">
                                               <a href=""><i class="fa fa-search"></i></a>
-
-</form>
+                                            </form>
                                           </div>
                                         </div>
                                     </div>
                                     <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
                                         <div class="header-right-info">
+                                          <button id="toggle-theme" class="btn btn-sm btn-outline-secondary" style="margin-right: 10px;">
+  Light Mode
+</button>
+
                                             <ul class="nav navbar-nav mai-top-nav header-right-menu">                                                      
                                                 <li class="nav-item">
                                                     <a href="logout.php"> Log Out</a>
@@ -281,5 +309,12 @@ $data = mysqli_fetch_array($query);
     <script src="js/plugins.js"></script>
     <!-- main JS
 		============================================ -->
+    <script>
+  $(document).ready(function () {
+    $('body').removeClass('mini-navbar');
+    $('#sidebar').removeClass('mini-navbar');
+  });
+</script>
+
 </body>
 </html>

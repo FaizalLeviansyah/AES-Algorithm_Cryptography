@@ -1,0 +1,41 @@
+/* Light mode overrides */
+body {
+  background-color: #f9f9f9 !important;
+  color: #000 !important;
+}
+.card {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+.table {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+.table th {
+  background-color: #e2e6ea !important;
+  color: #000 !important;
+}
+.left-sidebar-pro,
+.sidebar-nav,
+.sidebar-header,
+.nalika-profile {
+  background-color: #ffffff !important;
+  color: #000 !important;
+}
+.sidebar-nav li a,
+.sidebar-nav li a i {
+  color: #000 !important;
+}
+.sidebar-nav li.active > a {
+  background-color: #e4e4e4 !important;
+  color: #007bff !important;
+}
+.sidebar-nav li a:hover {
+  background-color: #f1f1f1 !important;
+  color: #007bff !important;
+}
+.header-top-area,
+.header-top-wraper {
+  background-color: #ffffff !important;
+  color: #000 !important;
+}

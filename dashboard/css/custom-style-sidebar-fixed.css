@@ -34,3 +34,26 @@
     .section-file-table {
     margin-top: 2rem; /* atau 32px */
   }
+
+  /* FORCE mini-navbar to behave like normal navbar */
+body.mini-navbar .left-sidebar-pro {
+  width: 250px !important;
+}
+
+body.mini-navbar .left-custom-menu-adp-wrap {
+  display: block !important;
+  overflow: visible !important;
+}
+
+body.mini-navbar .sidebar-nav {
+  display: block !important;
+}
+
+body.mini-navbar .metismenu > li > a .mini-click-non {
+  display: inline !important;
+}
+
+body.mini-navbar .sidebar-header,
+body.mini-navbar .nalika-profile {
+  display: block !important;
+}
