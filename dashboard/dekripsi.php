@@ -124,13 +124,6 @@ $data = mysqli_fetch_array($query);
         <a href="#"><img src="https://lh3.googleusercontent.com/ogw/ADGmqu-5A4r40ZPotQWqRs5qBqjF1pxruJuJs5TURuzdZw=s83-c-mo" alt="" /></a>
         <h2><?php echo $data['fullname']; ?><p class="designation icon" style="color:green;"><?php echo $data['job_title']; ?></p></h2>
       </div>
-      <div class="profile-social-dtl">
-        <ul class="dtl-social">
-          <li><a href="#"><i class="icon nalika-facebook"></i></a></li>
-          <li><a href="#"><i class="icon nalika-twitter"></i></a></li>
-          <li><a href="#"><i class="icon nalika-linkedin"></i></a></li>
-        </ul>
-      </div>
     </div>
     <div class="left-custom-menu-adp-wrap comment-scrollbar">
       <nav class="sidebar-nav left-sidebar-menu-pro">
