@@ -30,6 +30,8 @@ $data = mysqli_fetch_array(mysqli_query($connect, "SELECT fullname,job_title FRO
   <link rel="stylesheet" href="css/custom-style-sidebar.css">
   <link rel="stylesheet" href="css/custom-style-sidebar-fixed.css">
   <link rel="stylesheet" href="css/light-mode.css" id="theme-style">
+  <link rel="stylesheet" href="css/theme-toggle.css">
+
 </head>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -55,6 +57,26 @@ $data = mysqli_fetch_array(mysqli_query($connect, "SELECT fullname,job_title FRO
   });
 </script>
 
+<script>
+  const themeBtn = document.getElementById("toggleThemeBtn");
+  const isDark = localStorage.getItem("theme") === "dark";
+
+  if (!isDark) {
+    document.body.classList.add("light-mode");
+    themeBtn.innerText = "🌙 Dark Mode";
+  } else {
+    themeBtn.innerText = "☀️ Light Mode";
+  }
+
+  themeBtn.addEventListener("click", () => {
+    document.body.classList.toggle("light-mode");
+    const isNowLight = document.body.classList.contains("light-mode");
+    localStorage.setItem("theme", isNowLight ? "light" : "dark");
+    themeBtn.innerText = isNowLight ? "🌙 Dark Mode" : "☀️ Light Mode";
+  });
+</script>
+
+
 <body>
   <!-- Sidebar -->
   <div class="left-sidebar-pro">
@@ -66,13 +88,6 @@ $data = mysqli_fetch_array(mysqli_query($connect, "SELECT fullname,job_title FRO
         <div class="profile-dtl">
           <a href="#"><img src="https://lh3.googleusercontent.com/ogw/ADGmqu-5A4r40ZPotQWqRs5qBqjF1pxruJuJs5TURuzdZw=s83-c-mo" alt="" /></a>
           <h2><?php echo $data['fullname']; ?><p class="designation icon" style="color:green;"><?php echo $data['job_title']; ?></p></h2>
-        </div>
-        <div class="profile-social-dtl">
-          <ul class="dtl-social">
-            <li><a href="#"><i class="icon nalika-facebook"></i></a></li>
-            <li><a href="#"><i class="icon nalika-twitter"></i></a></li>
-            <li><a href="#"><i class="icon nalika-linkedin"></i></a></li>
-          </ul>
         </div>
       </div>
       <div class="left-custom-menu-adp-wrap comment-scrollbar">
@@ -95,6 +110,7 @@ $data = mysqli_fetch_array(mysqli_query($connect, "SELECT fullname,job_title FRO
           <div class="row">
             <div class="col-lg-12">
               <div class="header-top-wraper">
+
                 <div class="row">
                   <div class="col-lg-1">
                     <div class="menu-switcher-pro">
