@@ -1,61 +1,54 @@
 <?php
-// File: dashboard/enkripsi.php (REVISI UI)
+// File: dashboard-analisis-aes.php (REVISI UI - Menampilkan Data "Sepenuhnya" dengan Template & DataTables)
 
-ini_set('display_errors', 1); // Opsional: tampilkan error untuk debugging
-error_reporting(E_ALL); // Opsional
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
+// 1. Otentikasi dan konfigurasi standar
 require_once __DIR__ . '/../auth_check.php';
 if (!isset($connect)) {
     require_once __DIR__ . '/../config.php';
 }
 
-// Data pengguna dari sesi (mengikuti pola yang sudah ada)
+// Update last activity (gunakan prepared statement)
+if (isset($_SESSION['username'])) {
+    $stmt_update_activity = mysqli_prepare($connect, "UPDATE users SET last_activity=now() WHERE username=?");
+    if ($stmt_update_activity) {
+        mysqli_stmt_bind_param($stmt_update_activity, "s", $_SESSION['username']);
+        mysqli_stmt_execute($stmt_update_activity);
+        mysqli_stmt_close($stmt_update_activity);
+    }
+}
+
+// 2. Data pengguna dari sesi
 $user_fullname_session = isset($_SESSION['fullname']) ? $_SESSION['fullname'] : 'Pengguna';
 $user_role_session = isset($_SESSION['role']) ? $_SESSION['role'] : 'guest';
 $user_job_title_session = ucfirst($user_role_session);
 
-// Data user untuk sidebar (konsisten dengan halaman lain)
 $data_user = [
     'fullname' => $user_fullname_session,
     'job_title' => $user_job_title_session,
 ];
 
-// Path untuk gambar profil di sidebar (disamakan dengan dekripsi.php & decrypt-file.php)
+// Path gambar profil sidebar
 $user_profile_pic_path_session = isset($_SESSION['profile_pic']) ? $_SESSION['profile_pic'] : 'img/contact/default-user.png';
-// Logika path gambar profil yang disederhanakan & dikonsolidasikan
 $user_profile_pic_sidebar = file_exists(__DIR__ . '/../' . $user_profile_pic_path_session) ? '../' . $user_profile_pic_path_session : (file_exists(__DIR__ . '/' . $user_profile_pic_path_session) ? $user_profile_pic_path_session : 'img/contact/default-user.png');
 if (!file_exists($user_profile_pic_sidebar) && strpos($user_profile_pic_sidebar, 'default-user.png') !== false) {
-    // Fallback jika default dari sesi tidak ada, coba path relatif dari dashboard/img/
     $user_profile_pic_sidebar = 'img/contact/default-user.png';
-    // Jika masih tidak ada, coba path relatif dari root/img/
     if (!file_exists(__DIR__ . '/' . $user_profile_pic_sidebar)) {
          $user_profile_pic_sidebar = '../img/contact/default-user.png';
-         // Final check jika masih tidak ada (misal folder img tidak ada di root)
          if (!file_exists(__DIR__ . '/../' . $user_profile_pic_sidebar) && !file_exists(__DIR__ . '/' . $user_profile_pic_sidebar)) {
-            // Jika semua gagal, gunakan placeholder atau log error
-             $user_profile_pic_sidebar = 'img/contact/default-user.png'; // Asumsi default ini ada di dashboard/img/
+             $user_profile_pic_sidebar = 'img/contact/default-user.png';
          }
     }
 }
 
-
-// Pengecekan role spesifik untuk halaman enkripsi
-if ($user_role_session == 'reviewer') {
-    // Redirect ke halaman unauthorized jika ada, atau ke halaman utama dengan pesan.
-    // Untuk contoh ini, kita redirect ke index dashboard dengan pesan.
-    $_SESSION['global_message'] = "Anda tidak memiliki izin untuk mengakses halaman enkripsi.";
-    $_SESSION['global_message_type'] = "warning";
-    header('Location: index.php');
-    exit;
-}
-
 // Path CSS dasar
-$base_css_path_enkripsi = 'css/';
-$action_card_encrypt_bg_enkripsi = "linear-gradient(135deg, #2ecc71, #27ae60)";
-$custom_sidebar_css_path_enkripsi = $base_css_path_enkripsi . 'custom-style-sidebar.css';
-$custom_sidebar_fixed_css_path_enkripsi = $base_css_path_enkripsi . 'custom-style-sidebar-fixed.css';
-$include_custom_sidebar_css_enkripsi = file_exists(__DIR__ . '/' . $custom_sidebar_css_path_enkripsi);
-$include_custom_sidebar_fixed_css_enkripsi = file_exists(__DIR__ . '/' . $custom_sidebar_fixed_css_path_enkripsi);
+$base_css_path_analisis = 'css/';
+$custom_sidebar_css_path_analisis = $base_css_path_analisis . 'custom-style-sidebar.css';
+$custom_sidebar_fixed_css_path_analisis = $base_css_path_analisis . 'custom-style-sidebar-fixed.css';
+$include_custom_sidebar_css_analisis = file_exists(__DIR__ . '/' . $custom_sidebar_css_path_analisis);
+$include_custom_sidebar_fixed_css_analisis = file_exists(__DIR__ . '/' . $custom_sidebar_fixed_css_path_analisis);
 
 ?>
 <!DOCTYPE html>
@@ -64,72 +57,40 @@ $include_custom_sidebar_fixed_css_enkripsi = file_exists(__DIR__ . '/' . $custom
     <meta charset="UTF-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enkripsi File - Aplikasi Kriptografi AES</title>
+    <title>Analisis Kinerja AES - Aplikasi Kriptografi AES</title>
     <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,700,900" rel="stylesheet">
     
-    <link rel="stylesheet" href="<?php echo $base_css_path_enkripsi; ?>bootstrap.min.css">
-    <link rel="stylesheet" href="<?php echo $base_css_path_enkripsi; ?>font-awesome.min.css">
-    <link rel="stylesheet" href="<?php echo $base_css_path_enkripsi; ?>nalika-icon.css">
-    <link rel="stylesheet" href="<?php echo $base_css_path_enkripsi; ?>meanmenu.min.css">
-    <link rel="stylesheet" href="<?php echo $base_css_path_enkripsi; ?>metisMenu/metisMenu.min.css">
-    <link rel="stylesheet" href="<?php echo $base_css_path_enkripsi; ?>metisMenu/metisMenu-vertical.css">
-    <link rel="stylesheet" href="<?php echo $base_css_path_enkripsi; ?>scrollbar/jquery.mCustomScrollbar.min.css">
-    <link rel="stylesheet" href="<?php echo $base_css_path_enkripsi; ?>animate.css">
-    <link rel="stylesheet" href="<?php echo $base_css_path_enkripsi; ?>normalize.css">
-    <link rel="stylesheet" href="style.css"> {/* style.css utama di direktori dashboard */}
+    <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>bootstrap.min.css">
+    <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>font-awesome.min.css">
+    <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>nalika-icon.css">
+    <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>meanmenu.min.css">
+    <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>metisMenu/metisMenu.min.css">
+    <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>metisMenu/metisMenu-vertical.css">
+    <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>scrollbar/jquery.mCustomScrollbar.min.css">
+    <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>animate.css">
+    <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>normalize.css">
+    <link rel="stylesheet" href="style.css"> 
 
-    <?php if ($include_custom_sidebar_css_enkripsi): ?>
-        <link rel="stylesheet" href="<?php echo $custom_sidebar_css_path_enkripsi; ?>">
+    <?php if ($include_custom_sidebar_css_analisis): ?>
+        <link rel="stylesheet" href="<?php echo $custom_sidebar_css_path_analisis; ?>">
     <?php endif; ?>
-    <?php if ($include_custom_sidebar_fixed_css_enkripsi): ?>
-        <link rel="stylesheet" href="<?php echo $custom_sidebar_fixed_css_path_enkripsi; ?>">
+    <?php if ($include_custom_sidebar_fixed_css_analisis): ?>
+        <link rel="stylesheet" href="<?php echo $custom_sidebar_fixed_css_path_analisis; ?>">
     <?php endif; ?>
 
-    <link rel="stylesheet" href="<?php echo $base_css_path_enkripsi; ?>responsive.css">
+    <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>responsive.css">
+    <link rel="stylesheet" type="text/css" href="../assets/plugins/datatables/css/jquery.dataTables.css">
+
     <script src="js/vendor/modernizr-2.8.3.min.js"></script>
     <style>
-        /* --- MULAI CSS KUSTOM (DISALIN DARI DASHBOARD/INDEX.PHP REVISI V9 atau dekripsi.php) --- */
+        /* --- MULAI CSS KUSTOM (DISALIN DARI DASHBOARD/INDEX.PHP REVISI V9 atau halaman lain yang sudah direvisi) --- */
         :root {
-            --header-height: 60px;
-            --sidebar-width-normal: 250px;
-            --sidebar-width-mini: 80px;
-
-            --light-header-bg: #FFFFFF;
-            --light-header-border: #E9EBF0;
-            --light-content-bg: #F4F6F9;
-
-            --light-text-primary: #343a40;
-            --light-text-secondary: #6c757d;
-            --light-icon-hover-bg: #f1f3f5;
-
-            --sidebar-bg: #FFFFFF !important;
-            --sidebar-header-gradient-start: #2ECC71 !important;
-            --sidebar-header-gradient-end:rgb(39, 50, 174) !important;
-            --sidebar-header-text-color: #FFFFFF !important;
-            --sidebar-text-color: #4B5158 !important;
-            --sidebar-text-hover-color:rgb(39, 50, 174) !important;
-            --sidebar-hover-bg: #E9F7EF !important;
-            --sidebar-active-bg: #D4EFDF !important;
-            --sidebar-accent-color: rgb(39, 50, 174)  !important;
-            --sidebar-accent-color-rgb: 39, 50, 174; /* Untuk box-shadow & form focus */
-            --sidebar-border-color: #E0E4E8 !important;
-
-            --card-bg: #FFFFFF;
-            --card-shadow: 0 2px 5px rgba(0,0,0,0.07);
-            --card-hover-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            --card-border-radius: 8px;
-
-            --text-color-default: #495057;
-            --text-color-muted: #6c757d;
-
-            --action-card-encrypt-gradient: <?php echo $action_card_encrypt_bg_enkripsi; ?>;
-            --action-card-decrypt-gradient: linear-gradient(135deg, #3498db, #2980b9);
-            --action-card-analysis-gradient: linear-gradient(135deg, #9b59b6, #8e44ad);
-            --action-card-text-color: #FFFFFF;
+            --header-height: 60px; /* Dan seterusnya, salin semua variabel root dari revisi sebelumnya */
+            --sidebar-width-normal: 250px; --sidebar-width-mini: 80px; --light-header-bg: #FFFFFF; --light-header-border: #E9EBF0; --light-content-bg: #F4F6F9; --light-text-primary: #343a40; --light-text-secondary: #6c757d; --light-icon-hover-bg: #f1f3f5; --sidebar-bg: #FFFFFF !important; --sidebar-header-gradient-start: #2ECC71 !important; --sidebar-header-gradient-end:rgb(39, 50, 174) !important; --sidebar-header-text-color: #FFFFFF !important; --sidebar-text-color: #4B5158 !important; --sidebar-text-hover-color:rgb(39, 50, 174) !important; --sidebar-hover-bg: #E9F7EF !important; --sidebar-active-bg: #D4EFDF !important; --sidebar-accent-color: rgb(39, 50, 174)  !important; --sidebar-accent-color-rgb: 39, 50, 174; --sidebar-border-color: #E0E4E8 !important; --card-bg: #FFFFFF; --card-shadow: 0 2px 5px rgba(0,0,0,0.07); --card-hover-shadow: 0 4px 10px rgba(0,0,0,0.1); --card-border-radius: 8px; --text-color-default: #495057; --text-color-muted: #6c757d; --action-card-encrypt-gradient: linear-gradient(135deg, #2ecc71, #27ae60); --action-card-decrypt-gradient: linear-gradient(135deg, #3498db, #2980b9); --action-card-analysis-gradient: linear-gradient(135deg, #9b59b6, #8e44ad); --action-card-text-color: #FFFFFF;
         }
-        /* ... (SEMUA CSS LAINNYA DARI BLOK STYLE dekripsi.php YANG SUDAH DIREVISI) ... */
-        body { font-family: 'Roboto', sans-serif; font-size: 14px; background-color: var(--light-content-bg) !important; overflow-x: hidden; }
+        /* ... (Salin SEMUA CSS dari blok <style> halaman enkripsi.php yang sudah direvisi sebelumnya, termasuk semua @media query) ... */
+        body { font-family: 'Roboto', sans-serif; font-size: 14px; background-color: var(--light-content-bg) !important; overflow-x: hidden; color: var(--text-color-default); } 
         .left-sidebar-pro { background-color: var(--sidebar-bg) !important; position: fixed !important; top: 0 !important; left: 0 !important; height: 100vh !important; width: var(--sidebar-width-normal) !important; z-index: 1032 !important; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; overflow: hidden; border-right: 1px solid var(--sidebar-border-color) !important; display: flex; flex-direction: column; }
         body.mini-navbar .left-sidebar-pro { width: var(--sidebar-width-mini) !important; }
         body.mini-navbar .sidebar-header .main-logo { display: none !important; }
@@ -199,119 +160,30 @@ $include_custom_sidebar_fixed_css_enkripsi = file_exists(__DIR__ . '/' . $custom
         @media (max-width: 480px) { .dashboard-title-header { font-size: 0.95em !important; max-width:100px; } .header-right-info .user-profile-area button { padding: 6px 10px !important; font-size: 0.8em !important; } }
         /* --- AKHIR CSS KUSTOM UMUM --- */
 
-        /* --- MULAI CSS SPESIFIK UNTUK enkripsi.php --- */
-        .form-container-card {
-            background-color: var(--card-bg);
-            padding: 30px 35px;
-            border-radius: var(--card-border-radius);
-            box-shadow: var(--card-shadow);
-            margin-top: 0;
-        }
-        .form-container-card h2.form-title {
-            color: var(--light-text-primary);
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 1.5em;
-            font-weight: 500;
-        }
-        .form-container-card p.form-subtitle {
-            color: var(--text-color-muted);
-            font-size:0.9em;
-            margin-bottom:25px;
-            border-bottom: 1px solid var(--light-header-border);
-            padding-bottom: 15px;
-        }
-        .form-group label {
-            font-weight: 500;
-            color: var(--light-text-secondary);
-            margin-bottom: .5rem;
-            font-size: 0.9em;
-        }
-        .form-control, .custom-file-label {
-            border-radius: 6px;
-            border: 1px solid #ced4da;
-            padding: .65rem 1rem;
-            font-size: 0.92em;
-            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-            background-color: #fff;
-            height: auto;
-        }
-        .form-control:focus {
-            border-color: var(--sidebar-accent-color);
-            box-shadow: 0 0 0 .2rem rgba(var(--sidebar-accent-color-rgb), 0.20);
-            background-color: #fff;
-        }
-        .custom-file-input:focus ~ .custom-file-label {
-            border-color: var(--sidebar-accent-color);
-            box-shadow: 0 0 0 .2rem rgba(var(--sidebar-accent-color-rgb), 0.20);
-        }
-        .custom-file-label::after { /* Tombol browse pada input file */
-            padding: .65rem 1rem;
-            background-color: var(--light-text-secondary);
-            color: white;
-            border-left: 1px solid #ced4da;
-            border-radius: 0 .375rem .375rem 0; /* Bootstrap 5 border radius for input-group-text */
-        }
-        .custom-file-input:lang(id) ~ .custom-file-label::after { content: "Telusuri"; }
+        /* --- CSS SPESIFIK UNTUK HALAMAN ANALISIS (Mirip dekripsi.php) --- */
+        .table-container-card { background-color: var(--card-bg); padding: 25px 30px; border-radius: var(--card-border-radius); box-shadow: var(--card-shadow); margin-top: 0; }
+        .table-container-card h2.table-title, .table-container-card h4.table-title { color: var(--light-text-primary); margin-top: 0; margin-bottom: 10px; font-size: 1.5em; font-weight: 500; }
+        .table-container-card h4.table-title .fa { margin-right: 8px; color: var(--sidebar-accent-color); }
+        .table-container-card p.table-subtitle { color: var(--text-color-muted); font-size:0.9em; margin-bottom:25px; border-bottom: 1px solid var(--light-header-border); padding-bottom: 15px; }
+        .table thead th { background-color: #f8f9fa; color: var(--light-text-primary); font-weight: 500; border-bottom-width: 2px; border-color: var(--light-header-border); font-size:0.8em; text-transform: uppercase; padding: 10px 12px; text-align: left; } /* Dibuat lebih kecil font-size dan align left */
+        .table tbody tr:hover { background-color: #f1f3f5; }
+        .table td, .table th { vertical-align: middle; font-size: 0.88em; padding: 9px 12px; color: var(--text-color-default); text-align: left; } /* Dibuat lebih kecil font-size dan align left */
+        .table td.hash-cell { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85em; }
+        .table .badge { font-weight: 500; font-size: 0.8em; padding: 0.4em 0.6em;} /* Ukuran badge disamakan */
+        .table .badge-alg.aes128 { background-color: #17a2b8; color:white; } 
+        .table .badge-alg.aes256 { background-color: #28a745; color:white; } 
+        .table .badge-op.enkripsi { background-color: #ffc107; color:#212529; } 
+        .table .badge-op.dekripsi { background-color: #6f42c1; color:white;} 
+        .table .badge-op.unknown, .table .badge-op.kosong { background-color: #6c757d; color:white;} 
+        /* DataTables styling (sama seperti dekripsi.php) */
+        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { font-size: 0.88em; color: var(--text-color-muted); margin-bottom: 0.5rem; }
+        .dataTables_wrapper .dataTables_length select { border: 1px solid #ddd; border-radius: 4px; padding: 4px 8px; background-color: #fff; margin: 0 5px; }
+        .dataTables_wrapper .dataTables_filter input { border: 1px solid #ddd; border-radius: 4px; padding: 5px 8px; margin-left: 5px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0.4em 0.8em; margin-left: 2px; border-radius: 4px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover { background: var(--sidebar-accent-color) !important; color: white !important; border-color: var(--sidebar-accent-color) !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #e9ecef !important; border-color: #ddd !important; color: var(--light-text-primary) !important; }
+        .dataTables_wrapper .row:first-child > div { margin-bottom: 0.5rem; } /* Jarak antara filter/length dan tabel */
 
-
-        /* Input group password toggle */
-        .input-group .form-control {
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-            border-right: none;
-        }
-        .input-group-append .btn {
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-            border: 1px solid #ced4da;
-            border-left: none;
-            background-color: #fff;
-            color: var(--light-text-secondary);
-            padding: .65rem .75rem;
-        }
-         .input-group-append .btn:hover {
-            background-color: #f8f9fa;
-        }
-        .input-group:focus-within .form-control,
-        .input-group:focus-within .input-group-append .btn {
-            border-color: var(--sidebar-accent-color);
-        }
-        .input-group:focus-within .form-control {
-             box-shadow: none;
-        }
-        .input-group:focus-within .input-group-append .btn {
-            box-shadow: 0 0 0 .2rem rgba(var(--sidebar-accent-color-rgb), 0.20);
-            z-index: 3;
-        }
-
-        textarea.form-control { min-height: 100px; }
-
-        .btn-submit-custom {
-            background: var(--action-card-encrypt-gradient) !important;
-            border: none !important;
-            color: var(--action-card-text-color) !important;
-            padding: 12px 28px;
-            font-size: 0.95em;
-            font-weight: 500;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .btn-submit-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(var(--sidebar-accent-color-rgb),0.3);
-        }
-        .btn-submit-custom .fa { margin-right: 8px; }
-
-        .alert-form-message {
-            margin-top: 0px;
-            margin-bottom: 20px;
-            font-size: 0.9em;
-            border-radius: var(--card-border-radius);
-            padding: 12px 18px;
-        }
-        .alert-form-message .fa { margin-right: 8px; }
         /* --- AKHIR CSS SPESIFIK --- */
     </style>
 </head>
@@ -320,12 +192,12 @@ $include_custom_sidebar_fixed_css_enkripsi = file_exists(__DIR__ . '/' . $custom
     <div class="left-sidebar-pro">
         <nav id="sidebar" class="">
             <div class="sidebar-header">
-                <a href="index.php"><img class="main-logo" src="img/logo/palw.png" alt="Logo PALW" /></a>
-                <strong><img src="img/logo/logosn.png" alt="Logo Small PALW" /></strong>
+                <a href="index.php"><img class="main-logo" src="img/logo/palw.png" alt="Logo Aplikasi" /></a>
+                <strong><img src="img/logo/logosn.png" alt="Logo Mini" /></strong>
             </div>
             <div class="nalika-profile">
                 <div class="profile-dtl">
-                    <a href="#"><img class="profile-img-sidebar" src="<?php echo htmlspecialchars($user_profile_pic_sidebar); ?>" alt="Foto Profil Pengguna" /></a>
+                    <a href="#"><img class="profile-img-sidebar" src="<?php echo htmlspecialchars($user_profile_pic_sidebar); ?>" alt="Foto Profil" /></a>
                     <h2><?php echo htmlspecialchars($data_user['fullname']); ?> <span class="designation icon"><?php echo htmlspecialchars($data_user['job_title']); ?></span></h2>
                 </div>
             </div>
@@ -346,11 +218,11 @@ $include_custom_sidebar_fixed_css_enkripsi = file_exists(__DIR__ . '/' . $custom
                             <i class="nalika-menu-task"></i>
                         </button>
                     </div>
-                    <h1 class="dashboard-title-header">Formulir Enkripsi File</h1>
+                    <h1 class="dashboard-title-header">Analisis Kinerja AES</h1>
                 </div>
                 <div class="header-right-info">
                     <ul class="nav navbar-nav mai-top-nav header-right-menu">
-                        <li class="nav-item d-none d-md-flex"> {/* d-none d-md-flex agar ikon search hilang di mobile */}
+                        <li class="nav-item d-none d-md-flex">
                             <a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle"><i class="nalika-search" aria-hidden="true"></i></a>
                             <div role="menu" class="dropdown-menu search-ml animated zoomIn">
                                 <div class="search-active-menu"><form action="#"><input type="text" placeholder="Cari disini..." class="form-control"><a href="#"><i class="fa fa-search"></i></a></form></div>
@@ -358,10 +230,9 @@ $include_custom_sidebar_fixed_css_enkripsi = file_exists(__DIR__ . '/' . $custom
                         </li>
                         <li class="nav-item user-profile-area">
                             <a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle">
-                                <button>Logout</button> {/* Tombol Logout Sederhana */}
+                                <button>Logout</button>
                             </a>
                             <ul role="menu" class="dropdown-header-top author-log dropdown-menu animated zoomIn">
-                                {/* Opsi bisa ditambahkan jika diperlukan, misal link ke profil atau pengaturan */}
                                 <li><a href="../logout.php"><span class="fa fa-sign-out author-log-ic"></span> Log Out</a></li>
                             </ul>
                         </li>
@@ -377,7 +248,7 @@ $include_custom_sidebar_fixed_css_enkripsi = file_exists(__DIR__ . '/' . $custom
                         <div class="col-lg-12">
                             <ul class="breadcome-list-custom">
                                 <li><a href="index.php">Dashboard</a> <span class="bread-slash">/</span></li>
-                                <li class="active">Enkripsi File</li>
+                                <li class="active">Analisis Kinerja AES</li>
                             </ul>
                         </div>
                     </div>
@@ -386,67 +257,63 @@ $include_custom_sidebar_fixed_css_enkripsi = file_exists(__DIR__ . '/' . $custom
 
             <div class="container-fluid">
                 <div class="row">
-                    <div class="col-lg-8 col-md-10 mx-auto"> {/* Form di tengah */}
-                        <div class="form-container-card">
-                            <h2 class="form-title">Formulir Enkripsi File</h2>
-                            <p class="form-subtitle">
-                                Unggah file, masukkan password, dan pilih algoritma AES untuk mengamankan file Anda.
+                    <div class="col-lg-12">
+                        <div class="table-container-card">
+                            <h4 class="table-title"><i class="fa fa-bar-chart"></i> Analisis Perbandingan AES-128 dan AES-256</h4>
+                            <p class="table-subtitle">
+                                Data berikut menampilkan perbandingan kinerja antara algoritma AES-128 dan AES-256 berdasarkan operasi enkripsi dan dekripsi yang telah dilakukan.
                             </p>
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="analisisAesTable"> 
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Nama File</th>
+                                            <th>Algoritma</th>
+                                            <th>Ukuran (KB)</th>
+                                            <th>Waktu (ms)</th>
+                                            <th>Operasi</th>
+                                            <th>Hash</th>
+                                            <th>Tanggal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        // Menggunakan query yang diberikan pengguna untuk halaman ini
+                                        $query_analisis = mysqli_query($connect, "SELECT * FROM file WHERE alg_used IS NOT NULL ORDER BY tgl_upload DESC");
+                                        $no_analisis = 1;
+                                        if ($query_analisis && mysqli_num_rows($query_analisis) > 0) {
+                                            while ($row_analisis = mysqli_fetch_assoc($query_analisis)) {
+                                                $alg_class_badge = strtolower(str_replace('-', '', $row_analisis['alg_used']));
+                                                
+                                                // Logika untuk badge jenis operasi
+                                                $op_text = !empty($row_analisis['operation_type']) ? ucfirst(htmlspecialchars($row_analisis['operation_type'])) : '-';
+                                                $op_class_temp = !empty($row_analisis['operation_type']) ? str_replace(' (simulasi)', '', $row_analisis['operation_type']) : 'kosong';
+                                                $op_class_badge = strtolower(htmlspecialchars($op_class_temp));
 
-                            <?php
-                            if (isset($_SESSION['encrypt_message'])) {
-                                $message_type_enkripsi = isset($_SESSION['encrypt_message_type']) && $_SESSION['encrypt_message_type'] == 'error' ? 'danger' : 'success';
-                                $alert_icon_enkripsi = $message_type_enkripsi == 'danger' ? 'fa-times-circle' : 'fa-check-circle';
-                                echo '<div class="alert alert-' . $message_type_enkripsi . ' alert-dismissible fade show alert-form-message" role="alert">';
-                                echo '<i class="fa ' . $alert_icon_enkripsi . '" aria-hidden="true"></i> ' . htmlspecialchars($_SESSION['encrypt_message']);
-                                echo '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
-                                echo '</div>';
-                                unset($_SESSION['encrypt_message'], $_SESSION['encrypt_message_type']);
-                            }
-                            ?>
-
-                            <form method="post" action="encrypt-process.php" enctype="multipart/form-data" id="encryptionForm">
-                                <div class="form-group">
-                                    <label for="fileToEncrypt">Pilih File <span class="text-danger">*</span></label>
-                                    <div class="custom-file">
-                                        <input type="file" name="file" id="fileToEncrypt" class="custom-file-input" required>
-                                        <label class="custom-file-label" for="fileToEncrypt" data-browse="Telusuri">Pilih file...</label>
-                                    </div>
-                                    <small class="form-text text-muted">Ukuran file maks: 5MB (Contoh). Sesuaikan dengan konfigurasi server Anda.</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="encryptionKey">Password / Kunci Enkripsi <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <input type="password" name="pwdfile" id="encryptionKey" class="form-control" placeholder="Masukkan password yang kuat" required autocomplete="new-password">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-secondary" type="button" id="togglePasswordEncrypt" title="Tampilkan/Sembunyikan Password">
-                                                <i class="fa fa-eye" aria-hidden="true"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <small class="form-text text-muted">Gunakan password yang kuat dan unik. Password ini dibutuhkan untuk dekripsi.</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="fileDescription">Deskripsi File (Opsional)</label>
-                                    <textarea name="desc" id="fileDescription" class="form-control" rows="3" placeholder="Contoh: Dokumen penting proyek Alpha"></textarea>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="aesAlgorithm">Pilih Algoritma AES <span class="text-danger">*</span></label>
-                                    <select name="algorithm" id="aesAlgorithm" class="form-control">
-                                        <option value="AES-128">AES-128 (Standar)</option>
-                                        <option value="AES-256" selected>AES-256 (Keamanan Lebih Tinggi)</option>
-                                    </select>
-                                </div>
-
-                                <div class="text-center mt-4 pt-2">
-                                    <button class="btn btn-submit-custom" name="encrypt_now" type="submit">
-                                        <i class="fa fa-shield" aria-hidden="true"></i> Enkripsi File
-                                    </button>
-                                </div>
-                            </form>
+                                                echo "<tr>
+                                                    <td>{$no_analisis}</td>
+                                                    <td>" . htmlspecialchars($row_analisis['file_name_source']) . "</td>
+                                                    <td><span class='badge badge-alg " . $alg_class_badge . "'>" . htmlspecialchars($row_analisis['alg_used']) . "</span></td>
+                                                    <td>" . htmlspecialchars(number_format((float)$row_analisis['file_size'], 2)) . "</td>
+                                                    <td>" . htmlspecialchars($row_analisis['process_time_ms']) . "</td>
+                                                    <td><span class='badge badge-op " . $op_class_badge . "'>" . $op_text . "</span></td>
+                                                    <td class='hash-cell' title='" . htmlspecialchars($row_analisis['hash_check']) . "'>" . htmlspecialchars(substr($row_analisis['hash_check'], 0, 20)) . "...</td>
+                                                    <td>" . htmlspecialchars(date('d M Y, H:i', strtotime($row_analisis['tgl_upload']))) . "</td>
+                                                </tr>";
+                                                $no_analisis++;
+                                            }
+                                        } else {
+                                            if(!$query_analisis) {
+                                                echo "<tr><td colspan='8' class='text-center text-danger'>Error query: " . mysqli_error($connect) . "</td></tr>";
+                                            } else {
+                                                echo "<tr><td colspan='8' class='text-center text-muted'>Belum ada data analisis AES yang relevan.</td></tr>";
+                                            }
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -458,7 +325,7 @@ $include_custom_sidebar_fixed_css_enkripsi = file_exists(__DIR__ . '/' . $custom
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="footer-copy-right">
-                            <p>Copyright © <?php echo date("Y"); ?> Aplikasi Kriptografi AES by <?php echo htmlspecialchars($data_user['fullname']); ?>. All rights reserved.</p>
+                             <p>Copyright © <?php echo date("Y"); ?> Aplikasi Kriptografi AES by <?php echo htmlspecialchars($data_user['fullname']); ?>. All rights reserved.</p>
                         </div>
                     </div>
                 </div>
@@ -479,71 +346,38 @@ $include_custom_sidebar_fixed_css_enkripsi = file_exists(__DIR__ . '/' . $custom
     <script src="js/metisMenu/metisMenu-active.js"></script>
     <script src="js/plugins.js"></script>
     <script src="js/main.js"></script>
+    <script src="../assets/plugins/datatables/js/jquery.dataTables.js"></script>
     <script>
         $(document).ready(function () {
-            // Skrip untuk custom file input Bootstrap 4
-            $('.custom-file-input').on('change', function() {
-                let fileName = $(this).val().split('\\').pop();
-                $(this).next('.custom-file-label').addClass("selected").html(fileName || "Pilih file...");
-            });
-
-            // Toggle password visibility untuk form enkripsi
-            const togglePasswordBtnEncrypt = document.querySelector('#togglePasswordEncrypt');
-            const passwordInputElEncrypt = document.querySelector('#encryptionKey');
-            if (togglePasswordBtnEncrypt && passwordInputElEncrypt) {
-                togglePasswordBtnEncrypt.addEventListener('click', function () {
-                    const type = passwordInputElEncrypt.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInputElEncrypt.setAttribute('type', type);
-                    const icon = this.querySelector('i');
-                    icon.classList.toggle('fa-eye');
-                    icon.classList.toggle('fa-eye-slash');
+            // Inisialisasi DataTables untuk tabel analisis
+            if ($('#analisisAesTable tbody tr').length > 1 || ($('#analisisAesTable tbody tr').length === 1 && !$('#analisisAesTable tbody td[colspan]').length) ) {
+                 $('#analisisAesTable').DataTable({
+                    "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
+                    "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
+                    "pageLength": 10,
+                    "responsive": true,
+                    "order": [[ 0, "asc" ]] // Default order by nomor
                 });
             }
             
-            // SALIN FUNGSI adjustMainLayout DARI DASHBOARD/INDEX.PHP (atau dekripsi.php yang sudah direvisi)
+            // Fungsi adjustMainLayout yang sudah ada
             function adjustMainLayout() {
-                var sidebarPro = $('.left-sidebar-pro');
-                var sidebarWidth = 0;
-                var rootStyles = getComputedStyle(document.documentElement);
+                var sidebarPro = $('.left-sidebar-pro'); var sidebarWidth = 0; var rootStyles = getComputedStyle(document.documentElement);
                 var defaultSidebarNormalWidth = parseFloat(rootStyles.getPropertyValue('--sidebar-width-normal').trim()) || 250;
                 var defaultSidebarMiniWidth = parseFloat(rootStyles.getPropertyValue('--sidebar-width-mini').trim()) || 80;
                 var headerHeight = parseFloat(rootStyles.getPropertyValue('--header-height').trim()) || 60;
-                var footerArea = $('.footer-copyright-area');
-                var footerHeight = (footerArea.length > 0 && footerArea.css('position') === 'fixed') ? (footerArea.outerHeight() || 56) : 0;
-
-                if ($(window).width() >= 768) {
-                    if (sidebarPro.length > 0 && sidebarPro.is(':visible')) {
-                        if ($('body').hasClass('mini-navbar')) { sidebarWidth = defaultSidebarMiniWidth; } else { sidebarWidth = defaultSidebarNormalWidth; }
-                    }
-                } else { sidebarWidth = 0; }
-
-                var headerTopArea = $('.header-top-area');
-                var allContentWrapper = $('.all-content-wrapper');
-
-                if (headerTopArea.css('position') === 'fixed') {
-                     if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) { headerTopArea.css({ 'left': sidebarWidth + 'px', 'width': 'calc(100% - ' + sidebarWidth + 'px)' }); } 
-                     else { headerTopArea.css({ 'left': '0px', 'width': '100%'}); }
-                }
-                if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) {
-                    allContentWrapper.css({ 'margin-left': sidebarWidth + 'px', 'padding-top': headerHeight + 'px', 'padding-bottom': (footerHeight + 20) + 'px' });
-                } else { allContentWrapper.css({ 'margin-left': '0px', 'padding-top': headerHeight + 'px', 'padding-bottom': (footerHeight + 20) + 'px' }); }
-
-                if (footerArea.length > 0 && footerArea.css('position') === 'fixed') {
-                    if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) { footerArea.css({ 'left': sidebarWidth + 'px', 'width': 'calc(100% - ' + sidebarWidth + 'px)' }); } 
-                    else { footerArea.css({ 'left': '0px', 'width': '100%'}); }
-                }
+                var footerArea = $('.footer-copyright-area'); var footerHeight = (footerArea.length > 0 && footerArea.css('position') === 'fixed') ? (footerArea.outerHeight() || 56) : 0;
+                if ($(window).width() >= 768) { if (sidebarPro.length > 0 && sidebarPro.is(':visible')) { if ($('body').hasClass('mini-navbar')) { sidebarWidth = defaultSidebarMiniWidth; } else { sidebarWidth = defaultSidebarNormalWidth; } } } else { sidebarWidth = 0; }
+                var headerTopArea = $('.header-top-area'); var allContentWrapper = $('.all-content-wrapper');
+                if (headerTopArea.css('position') === 'fixed') { if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) { headerTopArea.css({ 'left': sidebarWidth + 'px', 'width': 'calc(100% - ' + sidebarWidth + 'px)' }); } else { headerTopArea.css({ 'left': '0px', 'width': '100%'}); } }
+                if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) { allContentWrapper.css({ 'margin-left': sidebarWidth + 'px', 'padding-top': headerHeight + 'px', 'padding-bottom': (footerHeight + 20) + 'px' }); } else { allContentWrapper.css({ 'margin-left': '0px', 'padding-top': headerHeight + 'px', 'padding-bottom': (footerHeight + 20) + 'px' }); }
+                if (footerArea.length > 0 && footerArea.css('position') === 'fixed') { if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) { footerArea.css({ 'left': sidebarWidth + 'px', 'width': 'calc(100% - ' + sidebarWidth + 'px)' }); } else { footerArea.css({ 'left': '0px', 'width': '100%'}); } }
             }
-
             adjustMainLayout();
             var bodyNode = document.querySelector('body');
-            if (bodyNode) {
-                var observer = new MutationObserver(function(mutationsList) {
-                    for(let mutation of mutationsList) { if (mutation.type === 'attributes' && mutation.attributeName === 'class') { setTimeout(adjustMainLayout, 50); if ($(window).width() < 768) { if ($('body').hasClass('mini-navbar')) { $('#sidebarCollapse').addClass('active'); } else { $('#sidebarCollapse').removeClass('active'); } } break; } }
-                });
-                observer.observe(bodyNode, { attributes: true });
-            }
+            if (bodyNode) { var observer = new MutationObserver(function(mutationsList) { for(let mutation of mutationsList) { if (mutation.type === 'attributes' && mutation.attributeName === 'class') { setTimeout(adjustMainLayout, 50); if ($(window).width() < 768) { if ($('body').hasClass('mini-navbar')) { $('#sidebarCollapse').addClass('active'); } else { $('#sidebarCollapse').removeClass('active'); } } break; } } }); observer.observe(bodyNode, { attributes: true }); }
             $(window).on('resize', function() { setTimeout(adjustMainLayout, 50); });
-            $('#sidebarCollapse').on('click', function () { if ($(window).width() < 768) { $('body').toggleClass('mini-navbar'); } }); // Toggle mini-navbar hanya pada mobile
+            $('#sidebarCollapse').on('click', function () { if ($(window).width() < 768) { $('body').toggleClass('mini-navbar'); } });
         });
     </script>
 </body>
