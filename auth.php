@@ -1,30 +1,22 @@
+
 <?php
 session_start();
-include 'config.php';
+include('config.php');
 
-$error='';
-if (isset($_POST['login'])){
-if	(empty($_POST['username']) || empty($_POST['password'])) {
-	$error = "Username or Password Tidak Valid!";
+if (isset($_POST['login'])) {
+    $username = trim($_POST['username']);
+    $password = md5(trim($_POST['password'])); // Cocokkan dengan hash MD5 di database
 
-}else{
+    $query = mysqli_query($connect, "SELECT * FROM users WHERE username='$username' AND password='$password'");
+    $data = mysqli_fetch_array($query);
 
-$user = mysqli_real_escape_string($connect,$_POST['username']);
-$pass = mysqli_real_escape_string($connect,$_POST['password']);
-
-$query = "SELECT username,password FROM users WHERE username='$user' AND password=md5('$pass')";
-$sql = mysqli_query($connect,$query);
-$rows = mysqli_fetch_array($sql);
-	if ($rows) {
-		$_SESSION['username']=$user;
-		header("location: dashboard/index.php");
-} else {
-		echo "<script language=\"JavaScript\">\n";
-		echo "alert('Username atau Password Salah!');\n";
-		echo "window.location='index.php'";
-		echo "</script>";
-		}
-	}
+    if (mysqli_num_rows($query) > 0) {
+        $_SESSION['username'] = $data['username'];
+        $_SESSION['role'] = $data['role'];
+        $_SESSION['fullname'] = $data['fullname'];
+        header('Location: dashboard/');
+    } else {
+        echo "<script>alert('Username atau Password salah!'); window.location='index.php';</script>";
+    }
 }
-
 ?>
