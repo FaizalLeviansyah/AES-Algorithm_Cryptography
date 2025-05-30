@@ -1,0 +1,66 @@
+# Abaikan direktori hasil enkripsi dan dekripsi di dalam folder dashboard
+/dashboard/decrypted_result/
+/dashboard/encrypted_result/
+
+# Jika Anda memiliki folder upload sementara untuk file asli sebelum diproses
+# /nama_folder_upload_asli/
+
+# Abaikan file konfigurasi yang mungkin berisi kredensial sensitif
+# PENTING: Jika config.php Anda berisi password database atau kunci API,
+# sebaiknya jangan di-commit. Buat file contoh (misal: config.sample.php)
+# yang di-commit, lalu config.php diabaikan.
+/config.php
+
+# Abaikan direktori vendor jika Anda menggunakan Composer
+/vendor/
+
+# Abaikan file log
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Abaikan file sistem operasi
+.DS_Store
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+
+# Abaikan file spesifik IDE/Editor
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+nbproject/
+*.swp
+*~
+*.bak
+*.tmp
+
+# Abaikan file environment (jika ada)
+.env
+.env.*
+!.env.example
+
+# File atau folder lain yang spesifik untuk proyek Anda dan tidak perlu di-commit
+# Misalnya, folder untuk cache, sesi, dll.
+# /cache/
+# /sessions/
+
+# Jika Anda memiliki file .htaccess yang dikelola secara lokal dan berbeda dengan server
+# .htaccess
+
+# Node.js modules (jika Anda menggunakan Node.js untuk build tools atau lainnya)
+node_modules/
+package-lock.json
+yarn.lock
+# (Kecuali jika Anda ingin mengunci versi dengan package-lock.json atau yarn.lock,
+# maka jangan abaikan file lock tersebut)
+
+# Build Output
+/build/
+/dist/
+/public/build/
