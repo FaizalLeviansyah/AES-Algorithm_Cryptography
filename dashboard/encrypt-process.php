@@ -1,52 +1,57 @@
 <?php
 session_start();
-include "../config.php";
+include('../config.php');
+include('../session.php');
 
-if (isset($_POST['encrypt_now'])) {
-    $user       = $_SESSION['username'];
-    $password   = $_POST["pwdfile"];
-    $key128     = substr(hash('sha256', $password), 0, 16);
-    $key256     = substr(hash('sha256', $password), 0, 32);
-    $desc       = mysqli_real_escape_string($connect, $_POST['desc']);
-    $alg_used   = $_POST['algorithm']; // expected value: AES-128 or AES-256
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = $_SESSION['username'];
+    $originalFile = $_FILES['file'];
+    $password = $_POST['pwdfile'];
+    $desc = $_POST['desc'];
+    $algorithm = $_POST['algorithm']; // AES-128 / AES-256
 
-    $file_tmp   = $_FILES['file']['tmp_name'];
-    $file_name  = rand(1000,100000)."-".$_FILES['file']['name'];
-    $final_name = strtolower(str_replace(' ', '-', $file_name));
-    $file_size  = filesize($file_tmp);
-    $size_kb    = $file_size / 1024;
-    $file_ext   = pathinfo($final_name, PATHINFO_EXTENSION);
-
-    if (!in_array($file_ext, ['txt', 'docx', 'pptx', 'pdf'])) {
-        echo "<script>alert('File format tidak didukung!'); window.location.href='encrypt.php';</script>";
-        exit();
-    }
-    if ($size_kb > 3084) {
-        echo "<script>alert('Ukuran file terlalu besar!'); window.location.href='encrypt.php';</script>";
-        exit();
+    if (empty($password) || empty($originalFile['name']) || empty($algorithm)) {
+        die("Data tidak lengkap.");
     }
 
-    $plaintext   = file_get_contents($file_tmp);
-    $start_time  = microtime(true);
+    $originalName = basename($originalFile['name']);
+    $raw_content = file_get_contents($originalFile['tmp_name']);
 
-    $cipher      = 'AES-128-ECB';
-    $key         = $key128;
-    if ($alg_used === 'AES-256') {
-        $cipher  = 'AES-256-ECB';
-        $key     = $key256;
+    $cipher = $algorithm === 'AES-128' ? 'aes-128-cbc' : 'aes-256-cbc';
+    $key_length = $algorithm === 'AES-128' ? 16 : 32;
+    $key = substr(hash('sha256', $password, true), 0, $key_length);
+    $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($cipher));
+
+    $ciphertext = openssl_encrypt($raw_content, $cipher, $key, OPENSSL_RAW_DATA, $iv);
+    $final_data = base64_encode($iv . $ciphertext);
+
+    $newFileName = 'enc_' . time() . '_' . $originalName . '.rda';
+    $destinationFolder = __DIR__ . '/encrypted_result/';
+    if (!is_dir($destinationFolder)) {
+        mkdir($destinationFolder, 0755, true);
     }
+    
+    $destinationPath = $destinationFolder . $newFileName;
+    file_put_contents($destinationPath, $final_data);
 
-    $encrypted   = openssl_encrypt($plaintext, $cipher, $key, OPENSSL_RAW_DATA);
-    $duration_ms = round((microtime(true) - $start_time) * 1000, 3);
-    $hash        = hash('sha256', $plaintext);
+    $duration = 0; // dapat diukur juga
+    $fileSizeKB = round(filesize($destinationPath) / 1024, 2);
+    $hash = hash_file('sha256', $destinationPath);
 
-    $save_path = 'hasil_ekripsi/' . pathinfo($final_name, PATHINFO_FILENAME) . '.rda';
-    file_put_contents($save_path, $encrypted);
+    $db_path = 'dashboard/encrypted_result/' . $newFileName;
+    $query = "INSERT INTO file (
+        username, file_name_source, file_name_finish, file_url, 
+        file_size, password, alg_used, process_time_ms, 
+        operation_type, hash_check, tgl_upload, status, keterangan
+    ) VALUES (
+        '$username', '$originalName', '$newFileName', '$db_path',
+        '$fileSizeKB', 'KEY_NOT_STORED', '$algorithm', '$duration',
+        'encrypt', '$hash', NOW(), 1, '$desc'
+    )";
 
-    $sql = "INSERT INTO file (username, file_name_source, file_name_finish, file_url, file_size, password, alg_used, process_time_ms, operation_type, hash_check, tgl_upload, status, keterangan)
-            VALUES ('$user', '$final_name', '".basename($save_path)."', '$save_path', '$size_kb', '$key', '$alg_used', '$duration_ms', 'encrypt', '$hash', now(), '1', '$desc')";
-    mysqli_query($connect, $sql) or die(mysqli_error($connect));
-
-    echo "<script>alert('File berhasil dienkripsi!'); window.location.href='enkripsi.php';</script>";
+    if (mysqli_query($connect, $query)) {
+        header("Location: enkripsi.php?success=1");
+    } else {
+        die("Gagal menyimpan data: " . mysqli_error($connect));
+    }
 }
-?>
