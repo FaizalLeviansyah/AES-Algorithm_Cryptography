@@ -65,3 +65,4 @@ yarn.lock
 /dist/
 /public/build/
 /dashboard/hasil_dekripsi
+/decrypted_result
