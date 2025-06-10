@@ -31,7 +31,6 @@ if (!file_exists($user_profile_pic_sidebar) && strpos($user_profile_pic_sidebar,
      }
 }
 
-
 $id_file_to_process = null;
 $file_info = null;
 $error_message_form = '';
