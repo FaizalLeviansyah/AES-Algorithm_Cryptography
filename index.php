@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -41,4 +40,3 @@
   </div>
   <script type="text/javascript" src="assets/js/main1.js"></script>
 </body>
-</html>
