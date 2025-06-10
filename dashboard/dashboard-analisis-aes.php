@@ -1,14 +1,16 @@
 <?php
-// File: dashboard-analisis-aes.php (REVISI UI - Perbaikan Jenis Operasi)
+// File: dashboard-analisis-aes.php (REVISI UI - Menampilkan Data "Sepenuhnya" dengan Template & DataTables)
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+// 1. Otentikasi dan konfigurasi standar
 require_once __DIR__ . '/../auth_check.php';
 if (!isset($connect)) {
     require_once __DIR__ . '/../config.php';
 }
 
+// Update last activity (gunakan prepared statement)
 if (isset($_SESSION['username'])) {
     $stmt_update_activity = mysqli_prepare($connect, "UPDATE users SET last_activity=now() WHERE username=?");
     if ($stmt_update_activity) {
@@ -18,6 +20,7 @@ if (isset($_SESSION['username'])) {
     }
 }
 
+// 2. Data pengguna dari sesi
 $user_fullname_session = isset($_SESSION['fullname']) ? $_SESSION['fullname'] : 'Pengguna';
 $user_role_session = isset($_SESSION['role']) ? $_SESSION['role'] : 'guest';
 $user_job_title_session = ucfirst($user_role_session);
@@ -27,6 +30,7 @@ $data_user = [
     'job_title' => $user_job_title_session,
 ];
 
+// Path gambar profil sidebar
 $user_profile_pic_path_session = isset($_SESSION['profile_pic']) ? $_SESSION['profile_pic'] : 'img/contact/default-user.png';
 $user_profile_pic_sidebar = file_exists(__DIR__ . '/../' . $user_profile_pic_path_session) ? '../' . $user_profile_pic_path_session : (file_exists(__DIR__ . '/' . $user_profile_pic_path_session) ? $user_profile_pic_path_session : 'img/contact/default-user.png');
 if (!file_exists($user_profile_pic_sidebar) && strpos($user_profile_pic_sidebar, 'default-user.png') !== false) {
@@ -39,6 +43,7 @@ if (!file_exists($user_profile_pic_sidebar) && strpos($user_profile_pic_sidebar,
     }
 }
 
+// Path CSS dasar
 $base_css_path_analisis = 'css/';
 $custom_sidebar_css_path_analisis = $base_css_path_analisis . 'custom-style-sidebar.css';
 $custom_sidebar_fixed_css_path_analisis = $base_css_path_analisis . 'custom-style-sidebar-fixed.css';
@@ -65,7 +70,7 @@ $include_custom_sidebar_fixed_css_analisis = file_exists(__DIR__ . '/' . $custom
     <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>scrollbar/jquery.mCustomScrollbar.min.css">
     <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>animate.css">
     <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>normalize.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css"> 
 
     <?php if ($include_custom_sidebar_css_analisis): ?>
         <link rel="stylesheet" href="<?php echo $custom_sidebar_css_path_analisis; ?>">
@@ -75,42 +80,17 @@ $include_custom_sidebar_fixed_css_analisis = file_exists(__DIR__ . '/' . $custom
     <?php endif; ?>
 
     <link rel="stylesheet" href="<?php echo $base_css_path_analisis; ?>responsive.css">
+    <link rel="stylesheet" type="text/css" href="../assets/plugins/datatables/css/jquery.dataTables.css">
+
     <script src="js/vendor/modernizr-2.8.3.min.js"></script>
     <style>
         /* --- MULAI CSS KUSTOM (DISALIN DARI DASHBOARD/INDEX.PHP REVISI V9 atau halaman lain yang sudah direvisi) --- */
         :root {
-            --header-height: 60px;
-            --sidebar-width-normal: 250px;
-            --sidebar-width-mini: 80px;
-            --light-header-bg: #FFFFFF;
-            --light-header-border: #E9EBF0;
-            --light-content-bg: #F4F6F9;
-            --light-text-primary: #343a40;
-            --light-text-secondary: #6c757d;
-            --light-icon-hover-bg: #f1f3f5;
-            --sidebar-bg: #FFFFFF !important;
-            --sidebar-header-gradient-start: #2ECC71 !important;
-            --sidebar-header-gradient-end:rgb(39, 50, 174) !important;
-            --sidebar-header-text-color: #FFFFFF !important;
-            --sidebar-text-color: #4B5158 !important;
-            --sidebar-text-hover-color:rgb(39, 50, 174) !important;
-            --sidebar-hover-bg: #E9F7EF !important;
-            --sidebar-active-bg: #D4EFDF !important;
-            --sidebar-accent-color: rgb(39, 50, 174)  !important;
-            --sidebar-accent-color-rgb: 39, 50, 174;
-            --sidebar-border-color: #E0E4E8 !important;
-            --card-bg: #FFFFFF;
-            --card-shadow: 0 2px 5px rgba(0,0,0,0.07);
-            --card-hover-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            --card-border-radius: 8px;
-            --text-color-default: #495057;
-            --text-color-muted: #6c757d;
-            --action-card-encrypt-gradient: linear-gradient(135deg, #2ecc71, #27ae60);
-            --action-card-decrypt-gradient: linear-gradient(135deg, #3498db, #2980b9);
-            --action-card-analysis-gradient: linear-gradient(135deg, #9b59b6, #8e44ad);
-            --action-card-text-color: #FFFFFF;
+            --header-height: 60px; /* Dan seterusnya, salin semua variabel root dari revisi sebelumnya */
+            --sidebar-width-normal: 250px; --sidebar-width-mini: 80px; --light-header-bg: #FFFFFF; --light-header-border: #E9EBF0; --light-content-bg: #F4F6F9; --light-text-primary: #343a40; --light-text-secondary: #6c757d; --light-icon-hover-bg: #f1f3f5; --sidebar-bg: #FFFFFF !important; --sidebar-header-gradient-start: #2ECC71 !important; --sidebar-header-gradient-end:rgb(39, 50, 174) !important; --sidebar-header-text-color: #FFFFFF !important; --sidebar-text-color: #4B5158 !important; --sidebar-text-hover-color:rgb(39, 50, 174) !important; --sidebar-hover-bg: #E9F7EF !important; --sidebar-active-bg: #D4EFDF !important; --sidebar-accent-color: rgb(39, 50, 174)  !important; --sidebar-accent-color-rgb: 39, 50, 174; --sidebar-border-color: #E0E4E8 !important; --card-bg: #FFFFFF; --card-shadow: 0 2px 5px rgba(0,0,0,0.07); --card-hover-shadow: 0 4px 10px rgba(0,0,0,0.1); --card-border-radius: 8px; --text-color-default: #495057; --text-color-muted: #6c757d; --action-card-encrypt-gradient: linear-gradient(135deg, #2ecc71, #27ae60); --action-card-decrypt-gradient: linear-gradient(135deg, #3498db, #2980b9); --action-card-analysis-gradient: linear-gradient(135deg, #9b59b6, #8e44ad); --action-card-text-color: #FFFFFF;
         }
-        body { font-family: 'Roboto', sans-serif; font-size: 14px; background-color: var(--light-content-bg) !important; overflow-x: hidden; }
+        /* ... (Salin SEMUA CSS dari blok <style> halaman enkripsi.php yang sudah direvisi sebelumnya, termasuk semua @media query) ... */
+        body { font-family: 'Roboto', sans-serif; font-size: 14px; background-color: var(--light-content-bg) !important; overflow-x: hidden; color: var(--text-color-default); } 
         .left-sidebar-pro { background-color: var(--sidebar-bg) !important; position: fixed !important; top: 0 !important; left: 0 !important; height: 100vh !important; width: var(--sidebar-width-normal) !important; z-index: 1032 !important; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; overflow: hidden; border-right: 1px solid var(--sidebar-border-color) !important; display: flex; flex-direction: column; }
         body.mini-navbar .left-sidebar-pro { width: var(--sidebar-width-mini) !important; }
         body.mini-navbar .sidebar-header .main-logo { display: none !important; }
@@ -180,90 +160,31 @@ $include_custom_sidebar_fixed_css_analisis = file_exists(__DIR__ . '/' . $custom
         @media (max-width: 480px) { .dashboard-title-header { font-size: 0.95em !important; max-width:100px; } .header-right-info .user-profile-area button { padding: 6px 10px !important; font-size: 0.8em !important; } }
         /* --- AKHIR CSS KUSTOM UMUM --- */
 
-/* --- CSS SPESIFIK UNTUK HALAMAN ANALISIS (Bagian Badge Operasi Dimodifikasi) --- */
-.table-container-card { /* Menggunakan class yang sama dengan dekripsi.php */
-    background-color: var(--card-bg);
-    padding: 25px 30px;
-    border-radius: var(--card-border-radius);
-    box-shadow: var(--card-shadow);
-    margin-top: 0; 
-}
-.table-container-card h2.table-title,
-.table-container-card h4.table-title { 
-    color: var(--light-text-primary);
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.5em;
-    font-weight: 500;
-}
- .table-container-card h4.table-title .fa { 
-    margin-right: 8px;
-    color: var(--sidebar-accent-color);
-}
-.table-container-card p.table-subtitle {
-    color: var(--text-color-muted);
-    font-size:0.9em;
-    margin-bottom:25px;
-    border-bottom: 1px solid var(--light-header-border);
-    padding-bottom: 15px;
-}
-.table thead th { 
-    background-color: #f8f9fa;
-    color: var(--light-text-primary);
-    font-weight: 500;
-    border-bottom-width: 2px;
-    border-color: var(--light-header-border);
-    font-size:0.8em; /* Sedikit lebih kecil */
-    text-transform: uppercase;
-    padding: 10px 12px;
-    text-align: left;
-}
-.table tbody tr:hover { background-color: #f1f3f5; }
-.table td, .table th {
-    vertical-align: middle;
-    font-size: 0.88em; /* Sedikit lebih kecil */
-    padding: 9px 12px;
-    color: var(--text-color-default); 
-    text-align: left;
-}
-.table td.hash-cell { 
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.85em;
-}
-.table .badge { font-weight: 500; font-size: 0.8em; padding: 0.4em 0.6em;} 
+        /* --- CSS SPESIFIK UNTUK HALAMAN ANALISIS (Mirip dekripsi.php) --- */
+        .table-container-card { background-color: var(--card-bg); padding: 25px 30px; border-radius: var(--card-border-radius); box-shadow: var(--card-shadow); margin-top: 0; }
+        .table-container-card h2.table-title, .table-container-card h4.table-title { color: var(--light-text-primary); margin-top: 0; margin-bottom: 10px; font-size: 1.5em; font-weight: 500; }
+        .table-container-card h4.table-title .fa { margin-right: 8px; color: var(--sidebar-accent-color); }
+        .table-container-card p.table-subtitle { color: var(--text-color-muted); font-size:0.9em; margin-bottom:25px; border-bottom: 1px solid var(--light-header-border); padding-bottom: 15px; }
+        .table thead th { background-color: #f8f9fa; color: var(--light-text-primary); font-weight: 500; border-bottom-width: 2px; border-color: var(--light-header-border); font-size:0.8em; text-transform: uppercase; padding: 10px 12px; text-align: left; } /* Dibuat lebih kecil font-size dan align left */
+        .table tbody tr:hover { background-color: #f1f3f5; }
+        .table td, .table th { vertical-align: middle; font-size: 0.88em; padding: 9px 12px; color: var(--text-color-default); text-align: left; } /* Dibuat lebih kecil font-size dan align left */
+        .table td.hash-cell { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85em; }
+        .table .badge { font-weight: 500; font-size: 0.8em; padding: 0.4em 0.6em;} /* Ukuran badge disamakan */
+        .table .badge-alg.aes128 { background-color: #17a2b8; color:white; } 
+        .table .badge-alg.aes256 { background-color: #28a745; color:white; } 
+        .table .badge-op.enkripsi { background-color: #ffc107; color:#212529; } 
+        .table .badge-op.dekripsi { background-color: #6f42c1; color:white;} 
+        .table .badge-op.unknown, .table .badge-op.kosong { background-color: #6c757d; color:white;} 
+        /* DataTables styling (sama seperti dekripsi.php) */
+        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { font-size: 0.88em; color: var(--text-color-muted); margin-bottom: 0.5rem; }
+        .dataTables_wrapper .dataTables_length select { border: 1px solid #ddd; border-radius: 4px; padding: 4px 8px; background-color: #fff; margin: 0 5px; }
+        .dataTables_wrapper .dataTables_filter input { border: 1px solid #ddd; border-radius: 4px; padding: 5px 8px; margin-left: 5px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0.4em 0.8em; margin-left: 2px; border-radius: 4px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover { background: var(--sidebar-accent-color) !important; color: white !important; border-color: var(--sidebar-accent-color) !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #e9ecef !important; border-color: #ddd !important; color: var(--light-text-primary) !important; }
+        .dataTables_wrapper .row:first-child > div { margin-bottom: 0.5rem; } /* Jarak antara filter/length dan tabel */
 
-/* --- PERUBAHAN WARNA BADGE DI SINI --- */
-.table .badge-alg.aes128 { background-color: #17a2b8; color:white; } 
-.table .badge-alg.aes256 { background-color: #007bff; color:white; } /* Diubah jadi biru standard jika #28a745 (hijau) akan dipakai untuk enkripsi */
-
-.table .badge-op.encrypt { /* Pastikan class PHP menghasilkan 'encrypt' (lowercase) untuk operasi enkripsi */
-    background-color: #28a745 !important; /* Warna HIJAU untuk Enkripsi */
-    color: white !important; 
-}
-.table .badge-op.dekripsi { /* Pastikan class PHP menghasilkan 'dekripsi' (lowercase) untuk operasi dekripsi */
-    background-color: #dc3545 !important; /* Warna MERAH untuk Dekripsi */
-    color: white !important;
-}
-.table .badge-op.unknown, .table .badge-op.kosong { 
-    background-color: #6c757d; 
-    color:white;
-} 
-/* --- AKHIR PERUBAHAN WARNA BADGE --- */
-
-/* DataTables styling (sama seperti dekripsi.php) */
-.dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { font-size: 0.88em; color: var(--text-color-muted); margin-bottom: 0.5rem; }
-.dataTables_wrapper .dataTables_length select { border: 1px solid #ddd; border-radius: 4px; padding: 4px 8px; background-color: #fff; margin: 0 5px; }
-.dataTables_wrapper .dataTables_filter input { border: 1px solid #ddd; border-radius: 4px; padding: 5px 8px; margin-left: 5px; }
-.dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0.4em 0.8em; margin-left: 2px; border-radius: 4px; }
-.dataTables_wrapper .dataTables_paginate .paginate_button.current, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover { background: var(--sidebar-accent-color) !important; color: white !important; border-color: var(--sidebar-accent-color) !important; }
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #e9ecef !important; border-color: #ddd !important; color: var(--light-text-primary) !important; }
-.dataTables_wrapper .row:first-child > div { margin-bottom: 0.5rem; } 
-/* --- AKHIR CSS SPESIFIK --- */
-
-/* ... (Sisa CSS umum dan @media query tetap sama) ... */
+        /* --- AKHIR CSS SPESIFIK --- */
     </style>
 </head>
 <body class="">
@@ -276,7 +197,6 @@ $include_custom_sidebar_fixed_css_analisis = file_exists(__DIR__ . '/' . $custom
             </div>
             <div class="nalika-profile">
                 <div class="profile-dtl">
-                    <a href="#"><img class="profile-img-sidebar" src="<?php echo htmlspecialchars($user_profile_pic_sidebar); ?>" alt="Foto Profil" /></a>
                     <h2><?php echo htmlspecialchars($data_user['fullname']); ?> <span class="designation icon"><?php echo htmlspecialchars($data_user['job_title']); ?></span></h2>
                 </div>
             </div>
@@ -343,73 +263,50 @@ $include_custom_sidebar_fixed_css_analisis = file_exists(__DIR__ . '/' . $custom
                                 Data berikut menampilkan perbandingan kinerja antara algoritma AES-128 dan AES-256 berdasarkan operasi enkripsi dan dekripsi yang telah dilakukan.
                             </p>
                             <div class="table-responsive">
-                                <table class="table table-hover" id="analisisTable">
+                                <table class="table table-hover" id="analisisAesTable"> 
                                     <thead>
                                         <tr>
                                             <th>#</th>
-                                            <th>Nama File Asli</th>
+                                            <th>Nama File</th>
                                             <th>Algoritma</th>
                                             <th>Ukuran (KB)</th>
-                                            <th>Waktu Proses (ms)</th>
-                                            <th>Jenis Operasi</th>
-                                            <th style="min-width: 150px;">SHA-256 Hash (Output)</th>
-                                            <th>Tanggal Proses</th>
+                                            <th>Waktu (ms)</th>
+                                            <th>Operasi</th>
+                                            <th>Hash</th>
+                                            <th>Tanggal</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php
-                                        // MODIFIED QUERY: Tambahkan kolom 'status'
-                                        $resultAES_query = "SELECT file_name_source, alg_used, file_size, process_time_ms, operation_type, hash_check, tgl_upload, status 
-                                                            FROM file 
-                                                            WHERE alg_used IS NOT NULL AND (alg_used = 'AES-128' OR alg_used = 'AES-256')
-                                                            ORDER BY tgl_upload DESC";
-                                        $resultAES = mysqli_query($connect, $resultAES_query);
-                                        
-                                        if (!$resultAES) {
-                                            echo "<tr><td colspan='8' class='text-center text-danger'>Error query: " . mysqli_error($connect) . "</td></tr>";
-                                        } elseif (mysqli_num_rows($resultAES) === 0) {
-                                            echo "<tr><td colspan='8' class='text-center text-muted'>Belum ada data analisis AES yang relevan.</td></tr>";
-                                        } else {
-                                            $no = 1;
-                                            while ($row = mysqli_fetch_assoc($resultAES)) {
-                                                $alg_class_badge = strtolower(str_replace('-', '', $row['alg_used']));
-
-                                                // Logika untuk menampilkan jenis operasi
-                                                $operation_display_text = '';
-                                                $op_class_badge = '';
-
-                                                if (!empty($row['operation_type'])) {
-                                                    $operation_display_text = ucfirst(htmlspecialchars($row['operation_type']));
-                                                    // Hapus '(simulasi)' hanya untuk penentuan class badge, bukan dari teks tampilan asli
-                                                    $temp_op_type_for_class = str_replace(' (simulasi)', '', $row['operation_type']);
-                                                    $op_class_badge = strtolower(htmlspecialchars($temp_op_type_for_class));
-                                                } elseif (!empty($row['status'])) { // Fallback jika operation_type kosong, gunakan status
-                                                    if ($row['status'] == 1) {
-                                                        $operation_display_text = 'Enkripsi'; // Teks yang ditampilkan
-                                                        $op_class_badge = 'enkripsi';       // Class untuk badge
-                                                    } elseif ($row['status'] == 2) {
-                                                        $operation_display_text = 'Dekripsi'; // Teks yang ditampilkan
-                                                        $op_class_badge = 'dekripsi';       // Class untuk badge
-                                                    }
-                                                }
+                                        // Menggunakan query yang diberikan pengguna untuk halaman ini
+                                        $query_analisis = mysqli_query($connect, "SELECT * FROM file WHERE alg_used IS NOT NULL ORDER BY tgl_upload DESC");
+                                        $no_analisis = 1;
+                                        if ($query_analisis && mysqli_num_rows($query_analisis) > 0) {
+                                            while ($row_analisis = mysqli_fetch_assoc($query_analisis)) {
+                                                $alg_class_badge = strtolower(str_replace('-', '', $row_analisis['alg_used']));
                                                 
-                                                // Jika masih kosong setelah fallback, tampilkan placeholder
-                                                if (empty($operation_display_text)) {
-                                                    $operation_display_text = '-'; // Atau 'Tidak diketahui'
-                                                    $op_class_badge = 'kosong';    // Class untuk badge jika kosong/unknown
-                                                }
+                                                // Logika untuk badge jenis operasi
+                                                $op_text = !empty($row_analisis['operation_type']) ? ucfirst(htmlspecialchars($row_analisis['operation_type'])) : '-';
+                                                $op_class_temp = !empty($row_analisis['operation_type']) ? str_replace(' (simulasi)', '', $row_analisis['operation_type']) : 'kosong';
+                                                $op_class_badge = strtolower(htmlspecialchars($op_class_temp));
 
                                                 echo "<tr>
-                                                    <td>{$no}</td>
-                                                    <td>" . htmlspecialchars($row['file_name_source']) . "</td>
-                                                    <td><span class='badge badge-alg " . htmlspecialchars($alg_class_badge) . "'>" . htmlspecialchars($row['alg_used']) . "</span></td>
-                                                    <td>" . htmlspecialchars(number_format($row['file_size'], 2)) . "</td>
-                                                    <td>" . htmlspecialchars($row['process_time_ms']) . "</td>
-                                                    <td><span class='badge badge-op " . htmlspecialchars($op_class_badge) . "'>" . $operation_display_text . "</span></td>
-                                                    <td class='hash-cell' title='" . htmlspecialchars($row['hash_check']) . "'>" . htmlspecialchars(substr($row['hash_check'], 0, 20)) . "...</td>
-                                                    <td>" . htmlspecialchars(date('d M Y, H:i', strtotime($row['tgl_upload']))) . "</td>
+                                                    <td>{$no_analisis}</td>
+                                                    <td>" . htmlspecialchars($row_analisis['file_name_source']) . "</td>
+                                                    <td><span class='badge badge-alg " . $alg_class_badge . "'>" . htmlspecialchars($row_analisis['alg_used']) . "</span></td>
+                                                    <td>" . htmlspecialchars(number_format((float)$row_analisis['file_size_kb'], 2)) . "</td>
+                                                    <td>" . htmlspecialchars($row_analisis['process_time_ms']) . "</td>
+                                                    <td><span class='badge badge-op " . $op_class_badge . "'>" . $op_text . "</span></td>
+                                                    <td class='hash-cell' title='" . htmlspecialchars($row_analisis['hash_check']) . "'>" . htmlspecialchars(substr($row_analisis['hash_check'], 0, 20)) . "...</td>
+                                                    <td>" . htmlspecialchars(date('d M Y, H:i', strtotime($row_analisis['tgl_upload']))) . "</td>
                                                 </tr>";
-                                                $no++;
+                                                $no_analisis++;
+                                            }
+                                        } else {
+                                            if(!$query_analisis) {
+                                                echo "<tr><td colspan='8' class='text-center text-danger'>Error query: " . mysqli_error($connect) . "</td></tr>";
+                                            } else {
+                                                echo "<tr><td colspan='8' class='text-center text-muted'>Belum ada data analisis AES yang relevan.</td></tr>";
                                             }
                                         }
                                         ?>
@@ -448,50 +345,36 @@ $include_custom_sidebar_fixed_css_analisis = file_exists(__DIR__ . '/' . $custom
     <script src="js/metisMenu/metisMenu-active.js"></script>
     <script src="js/plugins.js"></script>
     <script src="js/main.js"></script>
+    <script src="../assets/plugins/datatables/js/jquery.dataTables.js"></script>
     <script>
         $(document).ready(function () {
-            // SALIN FUNGSI adjustMainLayout DARI HALAMAN LAIN YANG SUDAH DIREVISI
+            // Inisialisasi DataTables untuk tabel analisis
+            if ($('#analisisAesTable tbody tr').length > 1 || ($('#analisisAesTable tbody tr').length === 1 && !$('#analisisAesTable tbody td[colspan]').length) ) {
+                 $('#analisisAesTable').DataTable({
+                    "language": { "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json" },
+                    "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
+                    "pageLength": 10,
+                    "responsive": true,
+                    "order": [[ 0, "asc" ]] // Default order by nomor
+                });
+            }
+            
+            // Fungsi adjustMainLayout yang sudah ada
             function adjustMainLayout() {
-                var sidebarPro = $('.left-sidebar-pro');
-                var sidebarWidth = 0;
-                var rootStyles = getComputedStyle(document.documentElement);
+                var sidebarPro = $('.left-sidebar-pro'); var sidebarWidth = 0; var rootStyles = getComputedStyle(document.documentElement);
                 var defaultSidebarNormalWidth = parseFloat(rootStyles.getPropertyValue('--sidebar-width-normal').trim()) || 250;
                 var defaultSidebarMiniWidth = parseFloat(rootStyles.getPropertyValue('--sidebar-width-mini').trim()) || 80;
                 var headerHeight = parseFloat(rootStyles.getPropertyValue('--header-height').trim()) || 60;
-                var footerArea = $('.footer-copyright-area');
-                var footerHeight = (footerArea.length > 0 && footerArea.css('position') === 'fixed') ? (footerArea.outerHeight() || 56) : 0;
-
-                if ($(window).width() >= 768) {
-                    if (sidebarPro.length > 0 && sidebarPro.is(':visible')) {
-                        if ($('body').hasClass('mini-navbar')) { sidebarWidth = defaultSidebarMiniWidth; } else { sidebarWidth = defaultSidebarNormalWidth; }
-                    }
-                } else { sidebarWidth = 0; }
-
-                var headerTopArea = $('.header-top-area');
-                var allContentWrapper = $('.all-content-wrapper');
-
-                if (headerTopArea.css('position') === 'fixed') {
-                     if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) { headerTopArea.css({ 'left': sidebarWidth + 'px', 'width': 'calc(100% - ' + sidebarWidth + 'px)' }); } 
-                     else { headerTopArea.css({ 'left': '0px', 'width': '100%'}); }
-                }
-                if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) {
-                    allContentWrapper.css({ 'margin-left': sidebarWidth + 'px', 'padding-top': headerHeight + 'px', 'padding-bottom': (footerHeight + 20) + 'px' });
-                } else { allContentWrapper.css({ 'margin-left': '0px', 'padding-top': headerHeight + 'px', 'padding-bottom': (footerHeight + 20) + 'px' }); }
-
-                if (footerArea.length > 0 && footerArea.css('position') === 'fixed') {
-                    if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) { footerArea.css({ 'left': sidebarWidth + 'px', 'width': 'calc(100% - ' + sidebarWidth + 'px)' }); } 
-                    else { footerArea.css({ 'left': '0px', 'width': '100%'}); }
-                }
+                var footerArea = $('.footer-copyright-area'); var footerHeight = (footerArea.length > 0 && footerArea.css('position') === 'fixed') ? (footerArea.outerHeight() || 56) : 0;
+                if ($(window).width() >= 768) { if (sidebarPro.length > 0 && sidebarPro.is(':visible')) { if ($('body').hasClass('mini-navbar')) { sidebarWidth = defaultSidebarMiniWidth; } else { sidebarWidth = defaultSidebarNormalWidth; } } } else { sidebarWidth = 0; }
+                var headerTopArea = $('.header-top-area'); var allContentWrapper = $('.all-content-wrapper');
+                if (headerTopArea.css('position') === 'fixed') { if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) { headerTopArea.css({ 'left': sidebarWidth + 'px', 'width': 'calc(100% - ' + sidebarWidth + 'px)' }); } else { headerTopArea.css({ 'left': '0px', 'width': '100%'}); } }
+                if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) { allContentWrapper.css({ 'margin-left': sidebarWidth + 'px', 'padding-top': headerHeight + 'px', 'padding-bottom': (footerHeight + 20) + 'px' }); } else { allContentWrapper.css({ 'margin-left': '0px', 'padding-top': headerHeight + 'px', 'padding-bottom': (footerHeight + 20) + 'px' }); }
+                if (footerArea.length > 0 && footerArea.css('position') === 'fixed') { if ($(window).width() >= 768 || !$('body').hasClass('mini-navbar')) { footerArea.css({ 'left': sidebarWidth + 'px', 'width': 'calc(100% - ' + sidebarWidth + 'px)' }); } else { footerArea.css({ 'left': '0px', 'width': '100%'}); } }
             }
-
             adjustMainLayout();
             var bodyNode = document.querySelector('body');
-            if (bodyNode) {
-                var observer = new MutationObserver(function(mutationsList) {
-                    for(let mutation of mutationsList) { if (mutation.type === 'attributes' && mutation.attributeName === 'class') { setTimeout(adjustMainLayout, 50); if ($(window).width() < 768) { if ($('body').hasClass('mini-navbar')) { $('#sidebarCollapse').addClass('active'); } else { $('#sidebarCollapse').removeClass('active'); } } break; } }
-                });
-                observer.observe(bodyNode, { attributes: true });
-            }
+            if (bodyNode) { var observer = new MutationObserver(function(mutationsList) { for(let mutation of mutationsList) { if (mutation.type === 'attributes' && mutation.attributeName === 'class') { setTimeout(adjustMainLayout, 50); if ($(window).width() < 768) { if ($('body').hasClass('mini-navbar')) { $('#sidebarCollapse').addClass('active'); } else { $('#sidebarCollapse').removeClass('active'); } } break; } } }); observer.observe(bodyNode, { attributes: true }); }
             $(window).on('resize', function() { setTimeout(adjustMainLayout, 50); });
             $('#sidebarCollapse').on('click', function () { if ($(window).width() < 768) { $('body').toggleClass('mini-navbar'); } });
         });
