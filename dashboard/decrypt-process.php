@@ -1,158 +1,149 @@
 <?php
+// FILE: dashboard/decrypt-process.php (REVISI TOTAL)
+
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
-// Diasumsikan config.php dan session.php sudah benar path-nya
-// dan session.php menangani otentikasi/pengecekan sesi.
-include('../config.php'); 
-// include('../session.php'); // Jika session.php hanya start session dan sudah dilakukan di atas, ini bisa jadi duplikat.
-// Pastikan session sudah divalidasi (pengguna sudah login) sebelum melanjutkan.
-if (empty($_SESSION['username'])) { // Contoh validasi sederhana
+require_once __DIR__ . '/../config.php';
+
+// Validasi sesi dan input dasar
+if (empty($_SESSION['username'])) {
     die("Akses tidak sah. Silakan login terlebih dahulu.");
 }
 
-
 if (!isset($_GET['id_file']) || empty($_POST['pwdfile_decrypt'])) {
-    // Sebaiknya redirect dengan pesan error ke halaman sebelumnya
-    $_SESSION['dekripsi_message'] = "Permintaan tidak valid. ID file atau password tidak ada.";
-    $_SESSION['dekripsi_message_type'] = "error";
-    header("Location: dekripsi.php"); // Redirect ke halaman daftar dekripsi
-    exit;
-}
-
-$id_file = $_GET['id_file'];
-$key_user = $_POST['pwdfile_decrypt'];
-
-// Gunakan prepared statement untuk keamanan
-$stmt = mysqli_prepare($connect, "SELECT file_url, alg_used, file_name_source FROM file WHERE id_file = ?");
-if (!$stmt) {
-    // Sebaiknya redirect dengan pesan error
-    die("Gagal menyiapkan query: " . mysqli_error($connect));
-}
-mysqli_stmt_bind_param($stmt, "s", $id_file);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-$data = mysqli_fetch_assoc($result);
-mysqli_stmt_close($stmt);
-
-if (!$data) {
-    $_SESSION['dekripsi_message'] = "File tidak ditemukan di database.";
+    $_SESSION['dekripsi_message'] = "Permintaan tidak valid. ID file atau password tidak disediakan.";
     $_SESSION['dekripsi_message_type'] = "error";
     header("Location: dekripsi.php");
     exit;
 }
 
-$fullPath = __DIR__ . '/../' . $data['file_url']; // Path ke file terenkripsi (misal: project_root/dashboard/encrypted_files/enc_file.rda)
-$alg = $data['alg_used'];
-$originalName = $data['file_name_source'];
+$id_file = (int)$_GET['id_file'];
+$password = $_POST['pwdfile_decrypt'];
+$current_user = $_SESSION['username'];
+$current_role = $_SESSION['role'];
 
-if (!file_exists($fullPath) || !is_readable($fullPath)) {
-    $_SESSION['dekripsi_message'] = "File terenkripsi tidak ditemukan di server atau tidak dapat dibaca.";
-    $_SESSION['dekripsi_message_type'] = "error";
-    header("Location: dekripsi.php?id_file=" . urlencode($id_file)); // Kembali ke form dekripsi file spesifik
+// 1. Ambil data file dari database dengan aman
+$query = "SELECT file_url, alg_used, file_name_source, password_salt_hex, file_iv_hex, kdf_iterations, username FROM file WHERE id_file = ? AND status = '1'";
+$stmt = $connect->prepare($query);
+$stmt->bind_param("i", $id_file);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows === 0) {
+    $_SESSION['dekripsi_message'] = "File tidak ditemukan atau sudah dalam status terdekripsi.";
+    $_SESSION['dekripsi_message_type'] = "warning";
+    header("Location: dekripsi.php");
     exit;
 }
 
-$cipher = $alg === 'AES-128' ? 'aes-128-cbc' : 'aes-256-cbc';
-$key_len = $alg === 'AES-128' ? 16 : 32;
-$key = substr(hash('sha256', $key_user, true), 0, $key_len);
+$file_data = $result->fetch_assoc();
+$stmt->close();
 
-$base64_data = file_get_contents($fullPath);
-$raw_data = base64_decode($base64_data);
-$iv_len = openssl_cipher_iv_length($cipher);
+// Keamanan: Pastikan hanya admin atau pemilik file yang bisa mendekripsi
+if ($current_role !== 'superadmin' && $current_role !== 'admin' && $file_data['username'] !== $current_user) {
+    $_SESSION['dekripsi_message'] = "Anda tidak memiliki izin untuk mengakses file ini.";
+    $_SESSION['dekripsi_message_type'] = "error";
+    header("Location: dekripsi.php");
+    exit;
+}
 
-if (strlen($raw_data) < $iv_len) {
-    $_SESSION['dekripsi_message'] = "Gagal dekripsi: Data file terenkripsi tidak valid (terlalu pendek). Mungkin file rusak atau bukan file terenkripsi yang benar.";
+// 2. Persiapan parameter kriptografi
+$file_path_encrypted_physical = __DIR__ . '/../' . $file_data['file_url'];
+
+if (!file_exists($file_path_encrypted_physical) || !is_readable($file_path_encrypted_physical)) {
+    $_SESSION['dekripsi_message'] = "Gagal dekripsi: File sumber terenkripsi tidak ditemukan di server.";
     $_SESSION['dekripsi_message_type'] = "error";
     header("Location: decrypt-file.php?id_file=" . urlencode($id_file));
     exit;
 }
 
-$iv = substr($raw_data, 0, $iv_len);
-$ciphertext = substr($raw_data, $iv_len);
+$cipher = strtolower($file_data['alg_used']); // 'aes-128-cbc' atau 'aes-256-cbc'
+$key_length = ($cipher === 'aes-128-cbc') ? 16 : 32;
+$salt = hex2bin($file_data['password_salt_hex']);
+$iv = hex2bin($file_data['file_iv_hex']);
+$iterations = (int)$file_data['kdf_iterations'];
 
-// === MULAI PENGUKURAN WAKTU DEKRIPSI ===
-$start_time_decrypt = microtime(true);
+// 3. Proses Dekripsi Sebenarnya
+$encrypted_content = file_get_contents($file_path_encrypted_physical);
+$derived_key = hash_pbkdf2('sha256', $password, $salt, $iterations, $key_length, true);
 
-$decrypted = openssl_decrypt($ciphertext, $cipher, $key, OPENSSL_RAW_DATA, $iv);
+$start_time = microtime(true);
+$decrypted_content = openssl_decrypt($encrypted_content, $cipher, $derived_key, OPENSSL_RAW_DATA, $iv);
+$duration_ms = round((microtime(true) - $start_time) * 1000, 4);
 
-// === SELESAI PENGUKURAN WAKTU DEKRIPSI ===
-$end_time_decrypt = microtime(true);
-$process_time_ms = round(($end_time_decrypt - $start_time_decrypt) * 1000, 4); // Simpan dengan 4 desimal
-
-if ($decrypted === false) {
-    $_SESSION['dekripsi_message'] = "Gagal dekripsi. Password salah atau file rusak.";
+if ($decrypted_content === false) {
+    $_SESSION['dekripsi_message'] = "Dekripsi gagal. Kemungkinan besar password salah atau file rusak.";
     $_SESSION['dekripsi_message_type'] = "error";
-    header("Location: decrypt-file.php?id_file=" . urlencode($id_file)); // Kembali ke form input password
+    header("Location: decrypt-file.php?id_file=" . urlencode($id_file));
     exit;
 }
 
-$decryptedName = 'dec_' . time() . '_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $originalName); // Sanitasi nama file
+// 4. Simpan hasil dekripsi
+$original_name = $file_data['file_name_source'];
+$decrypted_filename = 'dec_' . time() . '_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $original_name);
+$output_dir = __DIR__ . '/decrypted_result/'; // Folder tujuan: dashboard/hasil_dekripsi/
+$output_path_physical = $output_dir . $decrypted_filename;
 
-// --- PERBAIKAN PATH PENYIMPANAN ---
-$decryptedResultFolder = __DIR__ . '/decrypted_result/'; // Path: project_root/dashboard/decrypted_result/
-if (!is_dir($decryptedResultFolder)) {
-    if (!mkdir($decryptedResultFolder, 0755, true)) {
-        $_SESSION['dekripsi_message'] = "Gagal membuat direktori penyimpanan hasil dekripsi.";
-        $_SESSION['dekripsi_message_type'] = "error";
-        header("Location: dekripsi.php");
-        exit;
+if (!is_dir($output_dir)) {
+    if (!mkdir($output_dir, 0755, true)) {
+        die("Fatal Error: Gagal membuat direktori 'hasil_dekripsi'. Pastikan folder 'dashboard' memiliki izin tulis.");
     }
 }
-$decryptedPathPhysical = $decryptedResultFolder . $decryptedName; // Path fisik lengkap untuk menyimpan file
-// --- AKHIR PERBAIKAN PATH PENYIMPANAN ---
 
-if (file_put_contents($decryptedPathPhysical, $decrypted) === false) {
-    $_SESSION['dekripsi_message'] = "Gagal menyimpan file hasil dekripsi.";
+if (file_put_contents($output_path_physical, $decrypted_content) === false) {
+    $_SESSION['dekripsi_message'] = "Gagal menyimpan file hasil dekripsi ke server.";
     $_SESSION['dekripsi_message_type'] = "error";
     header("Location: dekripsi.php");
     exit;
 }
 
-$fileSizeKB = round(filesize($decryptedPathPhysical) / 1024, 2);
-$hash_check_decrypted = hash_file('sha256', $decryptedPathPhysical);
+// 5. Update Database dengan Lengkap (TERMASUK tgl_decrypt)
+$now = date('Y-m-d H:i:s');
+$db_path_decrypted = 'dashboard/decrypted_result/' . $decrypted_filename;
+$size_kb_decrypted = round(filesize($output_path_physical) / 1024, 2);
+$hash_decrypted = hash_file('sha256', $output_path_physical);
+$new_status = '2'; // Status 2 = Terdekripsi
+$new_operation_type = 'dekripsi';
 
-// Path URL untuk database, relatif dari root proyek
-$file_url_db_decrypted = 'dashboard/decrypted_result/' . $decryptedName; 
-
-// Update database (gunakan prepared statement)
-$stmt_update = mysqli_prepare($connect, "UPDATE file SET 
-    status = 2, 
-    file_name_finish = ?,
-    file_url = ?,
-    operation_type = 'dekripsi', /* atau 'dekripsi (sukses)' */
-    process_time_ms = ?, /* Gunakan waktu yang sudah dihitung */
-    hash_check = ?,
-    file_size = ? /* Tambahkan update file_size jika ukurannya berubah setelah dekripsi */
-    WHERE id_file = ?
-");
-
-if (!$stmt_update) {
-    // Sebaiknya redirect dengan pesan error
-    die("Gagal menyiapkan statement update: " . mysqli_error($connect));
-}
-
-$operation_type_db = 'dekripsi'; // Anda bisa membuatnya lebih spesifik jika mau
-mysqli_stmt_bind_param($stmt_update, "ssdsds", 
-    $decryptedName, 
-    $file_url_db_decrypted, 
-    $process_time_ms, 
-    $hash_check_decrypted,
-    $fileSizeKB,
+$update_query = "UPDATE file SET 
+                    status = ?, 
+                    tgl_decrypt = ?, 
+                    file_name_finish = ?, 
+                    file_url = ?,
+                    file_size_kb = ?,
+                    hash_check = ?,
+                    operation_type = ?,
+                    process_time_ms = ?
+                 WHERE id_file = ?";
+                 
+$update_stmt = $connect->prepare($update_query);
+$update_stmt->bind_param("ssssdsidi",
+    $new_status,
+    $now, // Mengisi tgl_decrypt
+    $decrypted_filename,
+    $db_path_decrypted,
+    $size_kb_decrypted,
+    $hash_decrypted,
+    $new_operation_type,
+    $duration_ms,
     $id_file
 );
 
-if (mysqli_stmt_execute($stmt_update)) {
-    $_SESSION['dekripsi_message'] = "File '" . htmlspecialchars($originalName) . "' berhasil didekripsi.";
+if ($update_stmt->execute()) {
+    $_SESSION['dekripsi_message'] = "File '" . htmlspecialchars($original_name) . "' berhasil didekripsi.";
     $_SESSION['dekripsi_message_type'] = "success";
 } else {
-    $_SESSION['dekripsi_message'] = "Gagal mengupdate data file di database: " . mysqli_stmt_error($stmt_update);
+    $_SESSION['dekripsi_message'] = "Gagal mengupdate status file di database: " . $update_stmt->error;
     $_SESSION['dekripsi_message_type'] = "error";
-    // Hapus file yang sudah didekripsi jika update DB gagal
-    if (file_exists($decryptedPathPhysical)) {
-        unlink($decryptedPathPhysical);
+    // Cleanup: hapus file yang gagal diupdate ke db
+    if (file_exists($output_path_physical)) {
+        unlink($output_path_physical);
     }
 }
-mysqli_stmt_close($stmt_update);
+$update_stmt->close();
 
-header("Location: dekripsi.php"); // Redirect ke halaman daftar file (yang akan menampilkan pesan)
+header("Location: dekripsi.php");
 exit;
 ?>
