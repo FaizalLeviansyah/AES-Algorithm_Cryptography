@@ -569,7 +569,7 @@ $action_card_decrypt_bg = "linear-gradient(135deg, #3498db, #2980b9)"; // Gradas
             </div>
             <div class="nalika-profile">
                 <div class="profile-dtl">
-                    <a href="#"><img class="profile-img-sidebar" src="<?php echo htmlspecialchars($user_profile_pic_sidebar); ?>" alt="Foto Profil Pengguna" /></a>
+                    
                     <h2><?php echo htmlspecialchars($data_user['fullname']); ?> <span class="designation icon"><?php echo htmlspecialchars($data_user['job_title']); ?></span></h2>
                 </div>
             </div>
@@ -671,7 +671,7 @@ $action_card_decrypt_bg = "linear-gradient(135deg, #3498db, #2980b9)"; // Gradas
                                         // Pastikan $role sudah di-set dari auth_check.php
                                         $current_user_role = isset($_SESSION['role']) ? $_SESSION['role'] : 'guest';
 
-                                        $nama_kolom_ukuran_file = 'file_size'; // Ganti jika nama kolom berbeda
+                                        $nama_kolom_ukuran_file = 'file_size_kb'; // Ganti jika nama kolom berbeda
 
                                         if ($current_user_role == 'superadmin' || $current_user_role == 'admin') {
                                             $query_files_sql = "SELECT id_file, file_name_source, file_name_finish, {$nama_kolom_ukuran_file}, tgl_upload, status, alg_used FROM file ORDER BY tgl_upload DESC";
@@ -713,9 +713,9 @@ $action_card_decrypt_bg = "linear-gradient(135deg, #3498db, #2980b9)"; // Gradas
                                                                     <i class="fa fa-key"></i> Dekripsi
                                                                 </a>
                                                             <?php elseif ($file_data['status'] == 2): ?>
-                                                                <a href="enkripsi.php" class="btn btn-sm btn-action-encrypt-alt" title="Enkripsi File Baru">
-                                                                    <i class="fa fa-shield"></i> Enkripsi Ulang
-                                                                </a>
+                                                                <a href="enkripsi.php?reencrypt_id=<?php echo $file_data['id_file']; ?>" class="btn btn-sm btn-action-encrypt-alt" title="Enkripsi Ulang File Ini">
+    <i class="fa fa-shield"></i> Enkripsi Ulang
+</a>
                                                             <?php else: ?>
                                                                 <span>-</span>
                                                             <?php endif; ?>
@@ -749,7 +749,8 @@ $action_card_decrypt_bg = "linear-gradient(135deg, #3498db, #2980b9)"; // Gradas
                 </div>
             </div>
         </div>
-    </div> <script src="js/vendor/jquery-1.12.4.min.js"></script>
+    </div> 
+    <script src="js/vendor/jquery-1.12.4.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/wow.min.js"></script>
     <script src="js/jquery.meanmenu.js"></script>
