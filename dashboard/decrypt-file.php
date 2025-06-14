@@ -53,10 +53,10 @@ if (isset($_GET['id_file'])) {
             exit;
         }
         // Gunakan $user_role_session untuk pemeriksaan izin
-        if (!($user_role_session == 'superadmin' || $user_role_session == 'admin') && $file_info['username'] !== $_SESSION['username']) {
-            $_SESSION['dekripsi_message'] = "Error: Anda tidak memiliki izin untuk file ini.";
+        if ($user_role_session !== 'superadmin') {
+            $_SESSION['dekripsi_message'] = "Error: Anda tidak memiliki izin untuk melakukan dekripsi.";
             $_SESSION['dekripsi_message_type'] = "error";
-            header('Location: dekripsi.php');
+            header('Location: dekripsi.php'); // Or back to dashboard
             exit;
         }
         if ($file_info['status'] == 2) { // Sudah terdekripsi (disalin)
