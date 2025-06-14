@@ -517,10 +517,10 @@ $action_card_analysis_bg = "linear-gradient(135deg, #9b59b6, #8e44ad)";// Gradas
                             <div class="search-active-menu"><form action="#"><input type="text" placeholder="Search here..." class="form-control"><a href="#"><i class="fa fa-search"></i></a></form></div>
                         </div>
                     </li>
-                    <li class="nav-item dropdown d-none"> {/* Ikon Pesan DISembunyikan Sementara*/}
+                    <li class="nav-item dropdown d-none"> 
                         <a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle"><i class="fa fa-envelope-o" aria-hidden="true"></i><span class="indicator-ms"></span></a>
                     </li>
-                    <li class="nav-item dropdown d-none"> {/* Ikon Pesan DISembunyikan Sementara*/}
+                    <li class="nav-item dropdown d-none"> 
                         <a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle"><i class="fa fa-bell-o" aria-hidden="true"></i><span class="indicator-nt"></span></a>
                     </li>
                     <li class="nav-item user-profile-area"> 
