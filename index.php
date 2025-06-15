@@ -14,7 +14,7 @@
       <img src="assets/img/bg.svg">
     </div>
     <div class="login-content">
-      <form class="login-form" action="auth.php" method="post">
+      <form class="login-form" action="login-process.php" method="post">
         <img src="assets/img/avatar.svg">
         <h2 class="title">Welcome</h2>
         <div class="input-div one">
