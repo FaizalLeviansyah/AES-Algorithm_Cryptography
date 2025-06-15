@@ -502,7 +502,7 @@ $include_custom_sidebar_fixed_css = file_exists(dirname(__FILE__) . '/' . $custo
 
             <div class="container-fluid">
                 <div class="row">
-                    <div class="col-lg-8 col-md-10 mx-auto"> {/* Form di tengah dan tidak terlalu lebar */}
+                    <div class="col-lg-8 col-md-10 mx-auto"> 
                         <div class="form-container-card">
                             <h2 class="form-title">Formulir Dekripsi File</h2>
                             <?php if ($file_info): ?>
