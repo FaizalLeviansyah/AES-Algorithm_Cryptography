@@ -2,7 +2,7 @@
 // File: hash-helper.php (Temporary utility)
 
 // --- SET THE PASSWORD YOU WANT TO HASH HERE ---
-$plainTextPassword = 'masteruser1234'; 
+$plainTextPassword = 'superadmin1234'; 
 // ---------------------------------------------
 
 $hashedPassword = password_hash($plainTextPassword, PASSWORD_DEFAULT);
