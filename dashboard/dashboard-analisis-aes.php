@@ -258,7 +258,7 @@ $include_custom_sidebar_fixed_css_analisis = file_exists(__DIR__ . '/' . $custom
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="table-container-card">
-                            <h4 class="table-title"><i class="fa fa-bar-chart"></i> Analisis Perbandingan AES-128 dan AES-256</h4>
+                            <h4 class="table-title"><i class="fa fa-bar-chart"></i> Analisis AES-128 dan AES-256</h4>
                             <p class="table-subtitle">
                                 Data berikut menampilkan perbandingan kinerja antara algoritma AES-128 dan AES-256 berdasarkan operasi enkripsi dan dekripsi yang telah dilakukan.
                             </p>
@@ -272,41 +272,45 @@ $include_custom_sidebar_fixed_css_analisis = file_exists(__DIR__ . '/' . $custom
                                             <th>Ukuran (KB)</th>
                                             <th>Waktu (ms)</th>
                                             <th>Operasi</th>
-                                            <th>Hash</th>
+                                            <th>Iterasi KDF</th>
+                                            <th>Salt (Hex)</th>
+                                            <th>IV (Hex)</th>
                                             <th>Tanggal</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php
-                                        // Menggunakan query yang diberikan pengguna untuk halaman ini
+                                        // Using your original query and loop structure
                                         $query_analisis = mysqli_query($connect, "SELECT * FROM file WHERE alg_used IS NOT NULL ORDER BY tgl_upload DESC");
                                         $no_analisis = 1;
                                         if ($query_analisis && mysqli_num_rows($query_analisis) > 0) {
                                             while ($row_analisis = mysqli_fetch_assoc($query_analisis)) {
+                                                // Using your exact logic for badge styling
                                                 $alg_class_badge = strtolower(str_replace('-', '', $row_analisis['alg_used']));
-                                                
-                                                // Logika untuk badge jenis operasi
                                                 $op_text = !empty($row_analisis['operation_type']) ? ucfirst(htmlspecialchars($row_analisis['operation_type'])) : '-';
                                                 $op_class_temp = !empty($row_analisis['operation_type']) ? str_replace(' (simulasi)', '', $row_analisis['operation_type']) : 'kosong';
                                                 $op_class_badge = strtolower(htmlspecialchars($op_class_temp));
 
+                                                // Using the echo format as you requested, with the new columns
                                                 echo "<tr>
-                                                    <td>{$no_analisis}</td>
+                                                    <td>" . $no_analisis++ . "</td>
                                                     <td>" . htmlspecialchars($row_analisis['file_name_source']) . "</td>
                                                     <td><span class='badge badge-alg " . $alg_class_badge . "'>" . htmlspecialchars($row_analisis['alg_used']) . "</span></td>
                                                     <td>" . htmlspecialchars(number_format((float)$row_analisis['file_size_kb'], 2)) . "</td>
                                                     <td>" . htmlspecialchars($row_analisis['process_time_ms']) . "</td>
                                                     <td><span class='badge badge-op " . $op_class_badge . "'>" . $op_text . "</span></td>
-                                                    <td class='hash-cell' title='" . htmlspecialchars($row_analisis['hash_check']) . "'>" . htmlspecialchars(substr($row_analisis['hash_check'], 0, 20)) . "...</td>
+                                                    <td>" . htmlspecialchars(number_format($row_analisis['kdf_iterations'])) . "</td>
+                                                    <td class='hex-cell' title='" . htmlspecialchars($row_analisis['password_salt_hex']) . "'>" . substr(htmlspecialchars($row_analisis['password_salt_hex']), 0, 12) . "...</td>
+                                                    <td class='hex-cell' title='" . htmlspecialchars($row_analisis['file_iv_hex']) . "'>" . substr(htmlspecialchars($row_analisis['file_iv_hex']), 0, 12) . "...</td>
                                                     <td>" . htmlspecialchars(date('d M Y, H:i', strtotime($row_analisis['tgl_upload']))) . "</td>
                                                 </tr>";
-                                                $no_analisis++;
                                             }
                                         } else {
                                             if(!$query_analisis) {
-                                                echo "<tr><td colspan='8' class='text-center text-danger'>Error query: " . mysqli_error($connect) . "</td></tr>";
+                                                // Corrected colspan for the new number of columns
+                                                echo "<tr><td colspan='10' class='text-center text-danger'>Error query: " . mysqli_error($connect) . "</td></tr>";
                                             } else {
-                                                echo "<tr><td colspan='8' class='text-center text-muted'>Belum ada data analisis AES yang relevan.</td></tr>";
+                                                echo "<tr><td colspan='10' class='text-center text-muted'>Belum ada data analisis AES yang relevan.</td></tr>";
                                             }
                                         }
                                         ?>
