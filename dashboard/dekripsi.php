@@ -594,19 +594,19 @@ $action_card_decrypt_bg = "linear-gradient(135deg, #3498db, #2980b9)"; // Gradas
                 </div>
                 <div class="header-right-info">
                     <ul class="nav navbar-nav mai-top-nav header-right-menu">
-                        <li class="nav-item d-none d-md-flex"> {/* Search icon, sesuaikan dengan dashboard/index.php */}
+                        <li class="nav-item d-none d-md-flex"> 
                             <a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle"><i class="nalika-search" aria-hidden="true"></i></a>
                             <div role="menu" class="dropdown-menu search- мл animated zoomIn">
                                 <div class="search-active-menu"><form action="#"><input type="text" placeholder="Cari disini..." class="form-control"><a href="#"><i class="fa fa-search"></i></a></form></div>
                             </div>
                         </li>
-                        {/* Area User Profile disamakan dengan dashboard/index.php */}
+                      
                         <li class="nav-item user-profile-area">
                             <a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle">
-                                <button>Logout</button> {/* Sesuai dengan dashboard/index.php */}
+                                <button>Logout</button> 
                             </a>
                             <ul role="menu" class="dropdown-header-top author-log dropdown-menu animated zoomIn">
-                                {/* Jika ingin ada link profil/pengaturan, bisa ditambahkan di sini atau di sidebar-nav-universal.php */}
+                                
                                 <li><a href="../logout.php"><span class="fa fa-sign-out author-log-ic"></span> Log Out</a></li>
                             </ul>
                         </li>
