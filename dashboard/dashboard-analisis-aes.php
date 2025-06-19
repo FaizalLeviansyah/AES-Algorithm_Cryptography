@@ -260,7 +260,7 @@ $include_custom_sidebar_fixed_css_analisis = file_exists(__DIR__ . '/' . $custom
                         <div class="table-container-card">
                             <h4 class="table-title"><i class="fa fa-bar-chart"></i> Analisis AES-128 dan AES-256</h4>
                             <p class="table-subtitle">
-                                Data berikut menampilkan perbandingan kinerja antara algoritma AES-128 dan AES-256 berdasarkan operasi enkripsi dan dekripsi yang telah dilakukan.
+                                Data berikut menampilkan perbandingan kinerja antar algoritma AES-128 dan AES-256 berdasarkan operasi enkripsi dan dekripsi yang telah dilakukan.
                             </p>
                             <div class="table-responsive">
                                 <table class="table table-hover" id="analisisAesTable"> 
