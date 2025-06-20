@@ -1,5 +1,4 @@
 <?php
-// FILE: dashboard/encrypt-process.php (VERSI FINAL - AMAN & SESUAI DB)
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
