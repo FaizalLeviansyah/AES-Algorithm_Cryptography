@@ -34,7 +34,7 @@
           </div>
         </div>
         <button class="btn btn-primary btn-block" name="login">Login <i class="fa fa-sign-in fa-lg"></i></button>
-        <p style="margin-top:10px;">Admin | Master-Divisi | Master-User |</p>
+        <p style="margin-top:10px;">| USER |</p>
       </form>
     </div>
   </div>
