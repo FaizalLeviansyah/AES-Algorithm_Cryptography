@@ -116,8 +116,8 @@ $update_query = "UPDATE file SET
                     hash_check = ?,
                     operation_type = ?,
                     process_time_ms = ?
-                 WHERE id_file = ?";
-                 
+                WHERE id_file = ?";
+
 $update_stmt = $connect->prepare($update_query);
 $update_stmt->bind_param("ssssdsidi",
     $new_status,
