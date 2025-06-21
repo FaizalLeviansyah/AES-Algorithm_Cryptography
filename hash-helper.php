@@ -1,6 +1,11 @@
 <?php
 // File: hash-helper.php (Temporary utility)
 
+//password for each role.
+//admin username : admin || password : superadmin1234 
+//admin username : divisi || password : masterdivisi1234
+//admin username : user || password : masteruser1234
+
 // --- SET THE PASSWORD YOU WANT TO HASH HERE ---
 $plainTextPassword = 'superadmin1234'; 
 // ---------------------------------------------
