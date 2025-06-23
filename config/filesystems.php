@@ -38,6 +38,13 @@ return [
             'report' => false,
         ],
 
+            // ▼▼▼ TAMBAHKAN BLOK BARU INI ▼▼▼
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+        ],
+        // ▲▲▲ SELESAI ▲▲▲
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
