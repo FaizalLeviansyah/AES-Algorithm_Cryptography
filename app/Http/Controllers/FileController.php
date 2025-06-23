@@ -37,11 +37,38 @@ class FileController extends Controller
             'bit' => ['required', 'in:128,256'], // Ukuran bit wajib ada, dan nilainya harus 128 atau 256
         ]);
 
+                // 2. Dapatkan file asli dan kontennya
+        $file = $request->file('file');
+        $originalFileName = $file->getClientOriginalName();
+        $fileContent = $file->get();
+
+        // 3. Lakukan Enkripsi menggunakan Service
+        $encryptionService = new EncryptionService($validatedData['key'], $validatedData['bit']);
+        $encryptionService->setData($fileContent);
+        $encryptedContent = $encryptionService->encrypt();
+
+        // 4. Simpan file yang sudah terenkripsi
+        $encryptedFileName = time() . '-' . str_replace(' ', '_', $originalFileName) . '.enc';
+        Storage::disk('private')->put($encryptedFileName, $encryptedContent);
+
+        // 5. Simpan informasi file ke database
+        FileModel::create([
+            'file_name_source' => $originalFileName,
+            'file_name_finish' => $encryptedFileName,
+            'file_path' => $encryptedFileName,
+            'file_size' => $file->getSize(),
+            'password' => $validatedData['description'],
+            'tgl_upload' => now(),
+            'username' => Auth::user()->username,
+            'status' => '1',
+            'bit' => $validatedData['bit'],
+        ]);
+
+        // 6. Redirect ke halaman dashboard dengan pesan sukses
+        return redirect()->route('dashboard')->with('success', 'File berhasil dienkripsi!');
+
         // Jika validasi berhasil, kode akan lanjut ke sini.
         // Jika gagal, Laravel akan otomatis kembali ke form dengan pesan error.
-
-        // Untuk sementara, kita hentikan dan tampilkan data yang sudah lolos validasi.
-        dd($validatedData);
     }
 
         /**
@@ -49,9 +76,8 @@ class FileController extends Controller
      */
     public function index()
     {
-        // Ambil semua data file dari database
-        // Untuk sekarang, kita ambil semua file. Nanti kita sesuaikan berdasarkan role.
-        $files = FileModel::latest()->get(); // Mengambil data terbaru di atas
+        // Ambil semua data file dari database, urutkan berdasarkan tgl_upload
+        $files = FileModel::orderBy('tgl_upload', 'desc')->get();
 
         // Kirim data files ke view
         return view('files.index', [
