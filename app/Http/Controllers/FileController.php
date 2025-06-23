@@ -132,4 +132,13 @@ class FileController extends Controller
         // Gunakan Storage::download untuk langsung mengirim file dari storage private
         return Storage::disk('private')->download($file->file_path, $file->file_name_finish);
     }
+
+        public function decryptSuccess()
+    {
+        // Cek apakah ada data file di session, jika tidak, kembali ke dashboard
+        if (!session()->has('decrypted_filename')) {
+            return redirect()->route('dashboard');
+        }
+        return view('files.decrypt-success');
+    }
 }
