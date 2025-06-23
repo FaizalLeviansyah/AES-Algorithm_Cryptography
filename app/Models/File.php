@@ -9,10 +9,24 @@ class File extends Model
 {
     use HasFactory;
 
-    // Tambahkan ini
     protected $primaryKey = 'id_file';
-
-    // Laravel mengasumsikan ada kolom created_at & updated_at,
-    // karena kita tidak mendefinisikannya di migrasi file, kita nonaktifkan
     public $timestamps = false;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    // ▼▼▼ TAMBAHKAN BLOK INI ▼▼▼
+    protected $fillable = [
+        'file_name_source',
+        'file_name_finish',
+        'file_path',
+        'file_size',
+        'password', // ini adalah kolom keterangan
+        'tgl_upload',
+        'username',
+        'status',
+        'bit',
+    ];
 }
