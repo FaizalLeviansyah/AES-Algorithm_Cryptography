@@ -141,4 +141,21 @@ class FileController extends Controller
         }
         return view('files.decrypt-success');
     }
+
+public function downloadDecrypted()
+{
+    // Cek apakah data ada di session
+    if (!session()->has('decrypted_content') || !session()->has('decrypted_filename')) {
+        return redirect()->route('dashboard')->with('error', 'Tidak ada file untuk diunduh atau sesi telah berakhir.');
+    }
+
+    // Ambil dan LANGSUNG HAPUS data dari session (lebih aman)
+    $content = session()->pull('decrypted_content');
+    $filename = session()->pull('decrypted_filename');
+
+    // Kirim file untuk diunduh
+    return response()->streamDownload(function () use ($content) {
+        echo $content;
+    }, $filename);
+}
 }

@@ -1,4 +1,8 @@
 <?php
+Route::get('/clear-session', function() {
+    session()->flush();
+    return 'Session berhasil dibersihkan! Silakan kembali ke halaman login.';
+});
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/files/{file}/dekripsi', [FileController::class, 'storeDecrypt'])->name('file.decrypt.store');
     Route::get('/files/{file}/download-encrypted', [FileController::class, 'downloadEncrypted'])->name('file.download.encrypted');
     Route::get('/dekripsi/berhasil', [FileController::class, 'decryptSuccess'])->name('file.decrypt.success');
+     Route::get('/download/hasil-dekripsi', [FileController::class, 'downloadDecrypted'])->name('file.download.decrypted');
 });
 
 require __DIR__.'/auth.php';
