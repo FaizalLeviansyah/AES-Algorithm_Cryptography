@@ -32,6 +32,14 @@ Route::middleware('auth')->group(function () {
 
     // ▼▼▼ TAMBAHKAN ROUTE BARU INI ▼▼▼
     Route::get('/files', [FileController::class, 'index'])->name('file.index');
+
+     // Route untuk Dekripsi
+    Route::get('/files/{file}/dekripsi', [FileController::class, 'createDecrypt'])->name('file.decrypt.create');
+
+    // Route untuk memproses data dari form dekripsi
+    Route::post('/files/{file}/dekripsi', [FileController::class, 'storeDecrypt'])->name('file.decrypt.store');
+
+    Route::get('/files/{file}/download-encrypted', [FileController::class, 'downloadEncrypted'])->name('file.download.encrypted');
 });
 
 require __DIR__.'/auth.php';

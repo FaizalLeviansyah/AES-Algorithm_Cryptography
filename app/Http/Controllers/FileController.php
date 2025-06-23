@@ -124,4 +124,15 @@ class FileController extends Controller
             echo $decryptedContent;
         }, $file->file_name_source); // Nama file saat di-download akan kembali ke nama aslinya
     }
+
+        public function downloadEncrypted(FileModel $file)
+    {
+        // Pastikan file ada di storage
+        if (!Storage::disk('private')->exists($file->file_path)) {
+            return back()->with('error', 'File tidak ditemukan di server.');
+        }
+
+        // Gunakan Storage::download untuk langsung mengirim file dari storage private
+        return Storage::disk('private')->download($file->file_path, $file->file_name_finish);
+    }
 }
