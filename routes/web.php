@@ -26,12 +26,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // ▼▼▼ BARIS INI YANG HILANG DARI KODE ANDA ▼▼▼
+    // Route untuk Enkripsi
     Route::get('/enkripsi', [FileController::class, 'createEncrypt'])->name('file.encrypt.create');
+    Route::post('/enkripsi', [FileController::class, 'storeEncrypt'])->name('file.encrypt.store');
 
     // ▼▼▼ TAMBAHKAN ROUTE BARU INI ▼▼▼
-    // Route untuk memproses data dari form enkripsi
-    Route::post('/enkripsi', [FileController::class, 'storeEncrypt'])->name('file.encrypt.store');
+    Route::get('/files', [FileController::class, 'index'])->name('file.index');
 });
 
 require __DIR__.'/auth.php';
