@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\View\View; // Pastikan use View ini ada
+use Illuminate\Http\Request; // <-- Pastikan ini ada
+use Illuminate\View\View;
 
 class FileController extends Controller
 {
@@ -13,5 +13,15 @@ class FileController extends Controller
     public function createEncrypt(): View
     {
         return view('files.encrypt');
+    }
+
+    /**
+     * Meng-handle proses upload dan enkripsi file.
+     */
+    public function storeEncrypt(Request $request)
+    {
+        // dd() adalah fungsi "dump and die" untuk debugging.
+        // Ini akan menampilkan semua data yang dikirim dari form dan menghentikan script.
+        dd($request->all());
     }
 }
