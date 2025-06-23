@@ -94,36 +94,33 @@ class FileController extends Controller
     }
 
      public function storeDecrypt(Request $request, FileModel $file)
-    {
-        // 1. Validasi input kunci dari pengguna
-        $request->validate([
-            'key' => ['required', 'string'],
-        ]);
+{
+    $request->validate(['key' => ['required', 'string']]);
 
-        // 2. Pastikan file terenkripsi ada di server
-        if (!Storage::disk('private')->exists($file->file_path)) {
-            return back()->with('error', 'File terenkripsi tidak ditemukan di server.');
-        }
-
-        // 3. Baca konten file yang terenkripsi
-        $encryptedContent = Storage::disk('private')->get($file->file_path);
-
-        // 4. Siapkan service dan coba lakukan dekripsi
-        $encryptionService = new EncryptionService($request->key, $file->bit);
-        $encryptionService->setData($encryptedContent);
-        $decryptedContent = $encryptionService->decrypt();
-
-        // 5. Cek hasil dekripsi. Jika hasilnya 'false', berarti kunci salah.
-        if ($decryptedContent === false) {
-            // Kembali ke halaman form dengan pesan error
-            return back()->with('error', 'Kunci yang Anda masukkan salah!');
-        }
-
-        // 6. Jika dekripsi berhasil, kirim file untuk di-download oleh browser
-        return response()->streamDownload(function () use ($decryptedContent) {
-            echo $decryptedContent;
-        }, $file->file_name_source); // Nama file saat di-download akan kembali ke nama aslinya
+    if (!Storage::disk('private')->exists($file->file_path)) {
+        return back()->with('error', 'File terenkripsi tidak ditemukan di server.');
     }
+
+    $encryptedContent = Storage::disk('private')->get($file->file_path);
+
+    $encryptionService = new EncryptionService($request->key, $file->bit);
+    $encryptionService->setData($encryptedContent);
+    $decryptedContent = $encryptionService->decrypt();
+
+    if ($decryptedContent === false) {
+        return back()->with('error', 'Kunci yang Anda masukkan salah!');
+    }
+
+    // ▼▼▼ BAGIAN YANG DIUBAH ▼▼▼
+    // Simpan konten dan nama file ke session untuk diunduh nanti
+    session([
+        'decrypted_content' => $decryptedContent,
+        'decrypted_filename' => $file->file_name_source,
+    ]);
+
+    // Arahkan ke halaman sukses
+    return redirect()->route('file.decrypt.success');
+}
 
         public function downloadEncrypted(FileModel $file)
     {
