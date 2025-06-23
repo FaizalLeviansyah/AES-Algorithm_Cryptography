@@ -1,22 +1,17 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FileController; // <-- TAMBAHKAN INI
+namespace App\Http\Controllers;
 
-// ... (kode route lainnya)
+use Illuminate\Http\Request;
+use Illuminate\View\View; // Pastikan use View ini ada
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // ▼▼▼ TAMBAHKAN ROUTE BARU DI BAWAH INI ▼▼▼
-    Route::get('/enkripsi', [FileController::class, 'createEncrypt'])->name('file.encrypt.create');
-});
-
-require __DIR__.'/auth.php';
+class FileController extends Controller
+{
+    /**
+     * Menampilkan form untuk enkripsi file.
+     */
+    public function createEncrypt(): View
+    {
+        return view('files.encrypt');
+    }
+}
