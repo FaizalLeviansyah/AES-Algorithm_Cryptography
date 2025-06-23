@@ -30,7 +30,7 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $file->tgl_upload }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $file->username }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="#" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200">Dekripsi</a>
+                                            <a href="{{ route('file.decrypt.create', $file) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200">Dekripsi</a>
                                             {{-- Tambahkan tombol lain jika perlu --}}
                                         </td>
                                     </tr>
