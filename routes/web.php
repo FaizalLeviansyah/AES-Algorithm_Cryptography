@@ -8,6 +8,15 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// ▼▼▼ TAMBAHKAN ROUTE INI UNTUK DEBUGGING ▼▼▼
+Route::get('/cek-konfigurasi', function () {
+    dd([
+        'Database Connection' => config('database.default'),
+        'Session Driver' => config('session.driver'),
+        'Database Name Used' => config('database.connections.mysql.database'),
+    ]);
+});
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -19,6 +28,10 @@ Route::middleware('auth')->group(function () {
 
     // ▼▼▼ BARIS INI YANG HILANG DARI KODE ANDA ▼▼▼
     Route::get('/enkripsi', [FileController::class, 'createEncrypt'])->name('file.encrypt.create');
+
+    // ▼▼▼ TAMBAHKAN ROUTE BARU INI ▼▼▼
+    // Route untuk memproses data dari form enkripsi
+    Route::post('/enkripsi', [FileController::class, 'storeEncrypt'])->name('file.encrypt.store');
 });
 
 require __DIR__.'/auth.php';
