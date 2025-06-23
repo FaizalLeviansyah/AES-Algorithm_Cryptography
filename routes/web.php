@@ -35,11 +35,10 @@ Route::middleware('auth')->group(function () {
 
      // Route untuk Dekripsi
     Route::get('/files/{file}/dekripsi', [FileController::class, 'createDecrypt'])->name('file.decrypt.create');
-
     // Route untuk memproses data dari form dekripsi
     Route::post('/files/{file}/dekripsi', [FileController::class, 'storeDecrypt'])->name('file.decrypt.store');
-
     Route::get('/files/{file}/download-encrypted', [FileController::class, 'downloadEncrypted'])->name('file.download.encrypted');
+    Route::get('/dekripsi/berhasil', [FileController::class, 'decryptSuccess'])->name('file.decrypt.success');
 });
 
 require __DIR__.'/auth.php';
