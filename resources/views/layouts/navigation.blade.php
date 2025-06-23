@@ -18,7 +18,15 @@
                         <x-nav-link :href="route('file.encrypt.create')" :active="request()->routeIs('file.encrypt.create')">
                         {{ __('Enkripsi') }}
                     </x-nav-link>
+
+                    {{-- ... link Dashboard dan Enkripsi ... --}}
+
+                    <x-nav-link :href="route('file.index')" :active="request()->routeIs('file.index')">
+                        {{ __('Manajemen File') }}
+                    </x-nav-link>
                 </div>
+
+
 
             </div>
 
