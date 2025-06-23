@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\EncryptionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use App\Models\File as FileModel;
 
 class FileController extends Controller
 {
@@ -38,5 +42,20 @@ class FileController extends Controller
 
         // Untuk sementara, kita hentikan dan tampilkan data yang sudah lolos validasi.
         dd($validatedData);
+    }
+
+        /**
+     * Menampilkan halaman manajemen file.
+     */
+    public function index()
+    {
+        // Ambil semua data file dari database
+        // Untuk sekarang, kita ambil semua file. Nanti kita sesuaikan berdasarkan role.
+        $files = FileModel::latest()->get(); // Mengambil data terbaru di atas
+
+        // Kirim data files ke view
+        return view('files.index', [
+            'files' => $files,
+        ]);
     }
 }
