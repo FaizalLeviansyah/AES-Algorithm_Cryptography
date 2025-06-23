@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use App\Models\File as FileModel;
+use App\Models\DecryptionLog;
 
 class FileController extends Controller
 {
@@ -85,43 +86,6 @@ class FileController extends Controller
         ]);
     }
 
-        public function createDecrypt(FileModel $file)
-    {
-        // Kirim data file yang akan didekripsi ke view
-        return view('files.decrypt', [
-            'file' => $file,
-        ]);
-    }
-
-     public function storeDecrypt(Request $request, FileModel $file)
-{
-    $request->validate(['key' => ['required', 'string']]);
-
-    if (!Storage::disk('private')->exists($file->file_path)) {
-        return back()->with('error', 'File terenkripsi tidak ditemukan di server.');
-    }
-
-    $encryptedContent = Storage::disk('private')->get($file->file_path);
-
-    $encryptionService = new EncryptionService($request->key, $file->bit);
-    $encryptionService->setData($encryptedContent);
-    $decryptedContent = $encryptionService->decrypt();
-
-    if ($decryptedContent === false) {
-        return back()->with('error', 'Kunci yang Anda masukkan salah!');
-    }
-
-    // ▼▼▼ BAGIAN YANG DIUBAH ▼▼▼
-    // Simpan konten dan nama file ke session untuk diunduh nanti
-    session([
-        'decrypted_content' => $decryptedContent,
-        'decrypted_filename' => $file->file_name_source,
-    ]);
-
-    // Arahkan ke halaman sukses
-    return redirect()->route('file.decrypt.success');
-}
-
         public function downloadEncrypted(FileModel $file)
     {
         // Pastikan file ada di storage
@@ -133,29 +97,34 @@ class FileController extends Controller
         return Storage::disk('private')->download($file->file_path, $file->file_name_finish);
     }
 
-        public function decryptSuccess()
+     public function directDecrypt(Request $request, FileModel $file)
     {
-        // Cek apakah ada data file di session, jika tidak, kembali ke dashboard
-        if (!session()->has('decrypted_filename')) {
-            return redirect()->route('dashboard');
+        // 1. Validasi input kunci
+        $request->validate(['key' => ['required', 'string']]);
+
+        // 2. Cek apakah file ada di storage
+        if (!Storage::disk('private')->exists($file->file_path)) {
+            return back()->with('error', 'File terenkripsi tidak ditemukan di server.');
         }
-        return view('files.decrypt-success');
+
+        // 3. Baca konten terenkripsi
+        $encryptedContent = Storage::disk('private')->get($file->file_path);
+
+        // 4. Siapkan service dan coba dekripsi
+        $encryptionService = new EncryptionService($request->key, $file->bit);
+        $encryptionService->setData($encryptedContent);
+        $decryptedContent = $encryptionService->decrypt();
+
+        // 5. Jika dekripsi gagal (kunci salah), kembali dengan pesan error
+        if ($decryptedContent === false) {
+            return back()->with('error', 'Kunci yang Anda masukkan untuk file "' . $file->file_name_source . '" salah!');
+        }
+
+        // (Nanti kita akan tambahkan pencatatan log di sini)
+
+        // 6. Jika berhasil, langsung kirim file untuk di-download
+        return response()->streamDownload(function () use ($decryptedContent) {
+            echo $decryptedContent;
+        }, $file->file_name_source);
     }
-
-public function downloadDecrypted()
-{
-    // Cek apakah data ada di session
-    if (!session()->has('decrypted_content') || !session()->has('decrypted_filename')) {
-        return redirect()->route('dashboard')->with('error', 'Tidak ada file untuk diunduh atau sesi telah berakhir.');
-    }
-
-    // Ambil dan LANGSUNG HAPUS data dari session (lebih aman)
-    $content = session()->pull('decrypted_content');
-    $filename = session()->pull('decrypted_filename');
-
-    // Kirim file untuk diunduh
-    return response()->streamDownload(function () use ($content) {
-        echo $content;
-    }, $filename);
-}
 }

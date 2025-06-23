@@ -34,16 +34,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/enkripsi', [FileController::class, 'createEncrypt'])->name('file.encrypt.create');
     Route::post('/enkripsi', [FileController::class, 'storeEncrypt'])->name('file.encrypt.store');
 
-    // ▼▼▼ TAMBAHKAN ROUTE BARU INI ▼▼▼
+    // Route untuk Manajemen File
     Route::get('/files', [FileController::class, 'index'])->name('file.index');
 
-     // Route untuk Dekripsi
-    Route::get('/files/{file}/dekripsi', [FileController::class, 'createDecrypt'])->name('file.decrypt.create');
-    // Route untuk memproses data dari form dekripsi
-    Route::post('/files/{file}/dekripsi', [FileController::class, 'storeDecrypt'])->name('file.decrypt.store');
+    // ▼▼▼ TAMBAHKAN KEMBALI ROUTE INI ▼▼▼
     Route::get('/files/{file}/download-encrypted', [FileController::class, 'downloadEncrypted'])->name('file.download.encrypted');
-    Route::get('/dekripsi/berhasil', [FileController::class, 'decryptSuccess'])->name('file.decrypt.success');
-     Route::get('/download/hasil-dekripsi', [FileController::class, 'downloadDecrypted'])->name('file.download.decrypted');
+
+    // Route untuk Dekripsi via Modal
+    Route::post('/files/{file}/direct-decrypt', [FileController::class, 'directDecrypt'])->name('file.direct_decrypt');
 });
 
 require __DIR__.'/auth.php';
