@@ -24,6 +24,9 @@
                         <x-nav-link :href="route('file.index')" :active="request()->routeIs('file.index')">
                             {{ __('Manajemen File') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
+                            {{ __('Manajemen User') }}
+                        </x-nav-link>
                     @endcan
 
                     {{-- Menu untuk Master User (dan role di atasnya juga bisa akses) --}}
