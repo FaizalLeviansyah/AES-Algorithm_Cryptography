@@ -166,16 +166,16 @@ class FileController extends Controller
 /**
  * Memproses file terenkripsi yang di-upload untuk didekripsi.
  */
-    public function processStandaloneDecrypt(Request $request)
+        public function processStandaloneDecrypt(Request $request)
     {
         // 1. Validasi input: harus ada file dan kunci
         $validatedData = $request->validate([
-            'encrypted_file' => ['required', 'file'], // kita beri nama 'encrypted_file'
+            'encrypted_file' => ['required', 'file'],
             'key' => ['required', 'string'],
-            // Kita tidak tahu ukuran bit-nya, jadi kita coba keduanya
         ]);
 
-        $encryptedContent = $request->file('encrypted_file')->get();
+        $encryptedFileObject = $request->file('encrypted_file');
+        $encryptedContent = $encryptedFileObject->get();
         $key = $validatedData['key'];
 
         // 2. Coba dekripsi dengan AES-256 terlebih dahulu
@@ -195,9 +195,21 @@ class FileController extends Controller
             return back()->with('error', 'Dekripsi gagal! Pastikan file dan kunci yang Anda masukkan benar.');
         }
 
-        // 5. Jika berhasil, kirim file untuk di-download
-        // Kita tidak tahu nama file aslinya, jadi kita beri nama generik
-        $originalFileName = 'decrypted_file_' . time();
+        // ▼▼▼ BAGIAN YANG DIPERBAIKI ▼▼▼
+
+        // 5. Dapatkan nama file yang di-upload oleh pengguna
+        $uploadedFileName = $encryptedFileObject->getClientOriginalName();
+
+        // 6. Coba hapus ekstensi '.enc' untuk mendapatkan nama file asli
+        // Ini dengan asumsi file yang di-upload selalu berakhiran .enc
+        if (str_ends_with(strtolower($uploadedFileName), '.enc')) {
+            $originalFileName = substr($uploadedFileName, 0, -4);
+        } else {
+            // Jika tidak ada .enc, gunakan nama file yang di-upload apa adanya
+            $originalFileName = $uploadedFileName;
+        }
+
+        // 7. Jika berhasil, kirim file untuk di-download dengan nama yang sudah diperbaiki
         return response()->streamDownload(function () use ($decryptedContent) {
             echo $decryptedContent;
         }, $originalFileName);
