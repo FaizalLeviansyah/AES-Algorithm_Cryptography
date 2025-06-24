@@ -24,6 +24,13 @@
                     <x-nav-link :href="route('file.index')" :active="request()->routeIs('file.index')">
                         {{ __('Manajemen File') }}
                     </x-nav-link>
+
+                    <x-nav-link :href="route('logs.encryption')" :active="request()->routeIs('logs.encryption')">
+                        {{ __('Log Enkripsi') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('logs.decryption')" :active="request()->routeIs('logs.decryption')">
+                        {{ __('Log Dekripsi') }}
+                    </x-nav-link>
                 </div>
 
 

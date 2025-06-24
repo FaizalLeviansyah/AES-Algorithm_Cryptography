@@ -42,6 +42,11 @@ Route::middleware('auth')->group(function () {
 
     // Route untuk Dekripsi via Modal
     Route::post('/files/{file}/direct-decrypt', [FileController::class, 'directDecrypt'])->name('file.direct_decrypt');
+
+    Route::get('/logs/enkripsi', [FileController::class, 'showEncryptionLogs'])->name('logs.encryption');
+    Route::get('/logs/dekripsi', [FileController::class, 'showDecryptionLogs'])->name('logs.decryption');
+
+
 });
 
 require __DIR__.'/auth.php';
