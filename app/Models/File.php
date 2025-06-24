@@ -29,4 +29,8 @@ class File extends Model
         'status',
         'bit',
     ];
+        public function division()
+    {
+        return $this->belongsTo(Division::class);
+    }
 }
