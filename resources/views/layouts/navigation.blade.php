@@ -29,6 +29,14 @@
                         </x-nav-link>
                     @endcan
 
+                    {{-- ... di dalam @can('is-admin') ... --}}
+                    @can('is-admin')
+                        {{-- ... link log ... --}}
+                        <x-nav-link :href="route('analysis.aes')" :active="request()->routeIs('analysis.aes')">
+                            {{ __('Analisis AES') }}
+                        </x-nav-link>
+                    @endcan
+
                     {{-- Menu untuk Master User (dan role di atasnya juga bisa akses) --}}
                     @can('is-user')
                         <x-nav-link :href="route('file.decrypt.standalone.create')" :active="request()->routeIs('file.decrypt.standalone.create')">

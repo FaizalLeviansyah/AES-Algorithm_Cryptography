@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AnalysisController; //
 
 Route::get('/', function () {
     return view('welcome');
@@ -36,6 +37,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/logs/enkripsi', [FileController::class, 'showEncryptionLogs'])->name('logs.encryption');
     Route::get('/logs/dekripsi', [FileController::class, 'showDecryptionLogs'])->name('logs.decryption');
     Route::resource('users', UserController::class)->except(['show']);
+
+    Route::get('/analisis-aes', [AnalysisController::class, 'index'])->name('analysis.aes')->middleware('can:is-admin');
+    Route::post('/analisis-aes', [AnalysisController::class, 'performAnalysis'])->name('analysis.aes.perform')->middleware('can:is-admin');
 });
 
 require __DIR__.'/auth.php';
