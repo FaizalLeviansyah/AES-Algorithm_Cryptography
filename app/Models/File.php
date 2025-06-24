@@ -29,8 +29,8 @@ class File extends Model
         'status',
         'bit',
     ];
-        public function division()
+    public function uploader()
     {
-        return $this->belongsTo(Division::class);
+        return $this->belongsTo(User::class, 'username', 'username');
     }
 }

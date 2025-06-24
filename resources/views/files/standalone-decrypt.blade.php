@@ -10,7 +10,7 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Halaman ini digunakan untuk mendekripsi file terenkripsi (.enc) yang Anda terima dari luar sistem.
+                        Halaman ini digunakan untuk mendekripsi file terenkripsi (.enc/.rda) yang Anda terima dari luar sistem.
                     </p>
 
                     <form method="POST" action="{{ route('file.decrypt.standalone.store') }}" enctype="multipart/form-data">

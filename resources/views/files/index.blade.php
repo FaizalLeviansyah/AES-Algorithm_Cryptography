@@ -6,7 +6,7 @@
     </x-slot>
 
     {{-- Kita gunakan x-data dari Alpine.js untuk mengelola state modal --}}
-    <div x-data="{ showModal: false, fileId: null, fileName: '', actionUrl: '' }">
+    <div x-data="{ showModal: false, fileName: '', actionUrl: '' }">
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -18,6 +18,7 @@
                                 <thead class="bg-gray-50 dark:bg-gray-700">
                                     <tr>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nama File Asli</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Uploader</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ukuran</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tgl Upload</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Aksi</th>
@@ -27,6 +28,7 @@
                                     @forelse ($files as $file)
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ $file->file_name_source }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $file->uploader->fullname ?? $file->username }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm">{{ round($file->file_size / 1024, 2) }} KB</td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm">{{ \Carbon\Carbon::parse($file->tgl_upload)->format('d M Y, H:i') }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
@@ -37,7 +39,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+                                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
                                                 Belum ada file yang dienkripsi.
                                             </td>
                                         </tr>

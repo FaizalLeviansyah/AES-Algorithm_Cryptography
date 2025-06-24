@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use App\Models\File as FileModel;
-use App\Models\DecryptionLog;
+use App\Models\User;
 use App\Models\EncryptionLog;
+use App\Models\DecryptionLog;
+use Illuminate\Support\Facades\Gate;
 
 
 class FileController extends Controller
@@ -63,7 +65,7 @@ class FileController extends Controller
             'file_size' => $file->getSize(),
             'password' => $validatedData['description'],
             'tgl_upload' => now(),
-            'username' => Auth::user()->username,
+            'username' => auth()->user()->username,
             'status' => '1',
             'bit' => $validatedData['bit'],
         ]);
@@ -86,10 +88,26 @@ class FileController extends Controller
      */
     public function index()
     {
-        // Ambil semua data file dari database, urutkan berdasarkan tgl_upload
-        $files = FileModel::orderBy('tgl_upload', 'desc')->get();
+        $user = auth()->user();
 
-        // Kirim data files ke view
+        // Admin bisa melihat semua file
+        if (Gate::allows('is-admin')) {
+            $files = FileModel::with('uploader.division')->latest('tgl_upload')->get();
+        }
+        // Master Divisi hanya melihat file dari user di divisinya
+        elseif (Gate::allows('is-admin-or-master-divisi')) {
+            // Ambil semua username dari user yang berada di divisi yang sama
+            $usernamesInDivision = User::where('division_id', $user->division_id)->pluck('username');
+            $files = FileModel::whereIn('username', $usernamesInDivision)
+                        ->with('uploader.division')
+                        ->latest('tgl_upload')
+                        ->get();
+        }
+        // Jika bukan keduanya (misal: Master User), beri array kosong
+        else {
+            $files = collect(); // Membuat koleksi kosong
+        }
+
         return view('files.index', [
             'files' => $files,
         ]);

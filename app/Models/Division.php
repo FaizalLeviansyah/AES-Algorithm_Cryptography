@@ -14,4 +14,9 @@ class Division extends Model
 
     // Kita juga bisa tambahkan ini agar aman saat create()
     protected $fillable = ['division_name'];
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

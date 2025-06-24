@@ -15,30 +15,37 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    {{-- Menu untuk Admin & Master Divisi --}}
+                    @can('is-admin-or-master-divisi')
                         <x-nav-link :href="route('file.encrypt.create')" :active="request()->routeIs('file.encrypt.create')">
-                        {{ __('Enkripsi') }}
-                    </x-nav-link>
+                            {{ __('Enkripsi') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('file.index')" :active="request()->routeIs('file.index')">
+                            {{ __('Manajemen File') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
+                            {{ __('Manajemen User') }}
+                        </x-nav-link>
+                    @endcan
 
-                    {{-- ... link Dashboard dan Enkripsi ... --}}
+                    {{-- Menu untuk Master User (dan role di atasnya juga bisa akses) --}}
+                    @can('is-user')
+                        <x-nav-link :href="route('file.decrypt.standalone.create')" :active="request()->routeIs('file.decrypt.standalone.create')">
+                            {{ __('Dekripsi Mandiri') }}
+                        </x-nav-link>
+                    @endcan
 
-                    <x-nav-link :href="route('file.index')" :active="request()->routeIs('file.index')">
-                        {{ __('Manajemen File') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('logs.encryption')" :active="request()->routeIs('logs.encryption')">
-                        {{ __('Log Enkripsi') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('logs.decryption')" :active="request()->routeIs('logs.decryption')">
-                        {{ __('Log Dekripsi') }}
-                    </x-nav-link>
-                    {{-- ... versi standalone di halaman tersendiri ... --}}
-                    <x-nav-link :href="route('file.decrypt.standalone.create')" :active="request()->routeIs('file.decrypt.standalone.create')">
-                        {{ __('Dekripsi Mandiri') }}
-                    </x-nav-link>
+                    {{-- Menu khusus Admin --}}
+                    @can('is-admin')
+                        <x-nav-link :href="route('logs.encryption')" :active="request()->routeIs('logs.encryption')">
+                            {{ __('Log Enkripsi') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('logs.decryption')" :active="request()->routeIs('logs.decryption')">
+                            {{ __('Log Dekripsi') }}
+                        </x-nav-link>
+                    @endcan
                 </div>
-
-
-
             </div>
 
             <!-- Settings Dropdown -->
