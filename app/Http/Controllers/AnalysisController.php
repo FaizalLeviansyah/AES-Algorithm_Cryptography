@@ -7,32 +7,69 @@ use Illuminate\Http\Request;
 
 class AnalysisController extends Controller
 {
+    // Method untuk menampilkan halaman awal analisis
     public function index()
     {
-        // Data sampel untuk diuji
-        $sampleData = str_repeat("Ini adalah contoh teks untuk pengujian kinerja enkripsi AES. ", 5000); // Membuat data sekitar 400KB
-        $password = 'kunci-rahasia-untuk-analisis';
+        // Kirim variabel 'results' sebagai array kosong saat pertama kali halaman dimuat
+        $results = [];
+        return view('analysis.index', compact('results'));
+    }
 
-        // Tes AES-128
-        $startTime128 = microtime(true);
-        $service128 = new EncryptionService($password, '128');
-        $service128->setData($sampleData);
-        $encrypted128 = $service128->encrypt();
-        $endTime128 = microtime(true);
-        $time128 = ($endTime128 - $startTime128) * 1000; // dalam milidetik
-
-        // Tes AES-256
-        $startTime256 = microtime(true);
-        $service256 = new EncryptionService($password, '256');
-        $service256->setData($sampleData);
-        $encrypted256 = $service256->encrypt();
-        $endTime256 = microtime(true);
-        $time256 = ($endTime256 - $startTime256) * 1000; // dalam milidetik
-
-        return view('analysis.index', [
-            'dataSize' => strlen($sampleData),
-            'time128' => $time128,
-            'time256' => $time256,
+    // Method untuk melakukan analisis dan menampilkan hasilnya
+    public function performAnalysis(Request $request)
+    {
+        // ... (kode validasi dan analisis Anda yang sudah ada tetap sama) ...
+        $request->validate([
+            'analysis_files.*' => ['required', 'file', 'max:5120'],
+            'analysis_files' => ['required', 'array', 'min:1'],
         ]);
+
+        $files = $request->file('analysis_files');
+        $password = 'kunci-rahasia-untuk-analisis-yang-sama';
+        $results = [];
+
+        foreach ($files as $file) {
+            $fileContent = $file->get();
+            $fileSize = $file->getSize();
+
+            if ($fileSize > 10 * 1024 * 1024) continue;
+
+            $timeEncrypt128 = $this->measurePerformance($fileContent, $password, '128', 'encrypt');
+            $timeDecrypt128 = $this->measurePerformance($fileContent, $password, '128', 'decrypt');
+            $timeEncrypt256 = $this->measurePerformance($fileContent, $password, '256', 'encrypt');
+            $timeDecrypt256 = $this->measurePerformance($fileContent, $password, '256', 'decrypt');
+
+            $results[] = [
+                'fileName' => $file->getClientOriginalName(),
+                'fileSize' => $fileSize,
+                'aes128' => [ 'encryptionTime' => $timeEncrypt128, 'decryptionTime' => $timeDecrypt128 ],
+                'aes256' => [ 'encryptionTime' => $timeEncrypt256, 'decryptionTime' => $timeDecrypt256 ],
+            ];
+        }
+
+        usort($results, fn($a, $b) => $a['fileSize'] <=> $b['fileSize']);
+
+        return view('analysis.index', compact('results'));
+    }
+
+    private function measurePerformance(string $data, string $password, string $bit, string $operation): float
+    {
+        // ... (kode method measurePerformance Anda tetap sama) ...
+        $service = new EncryptionService($password, $bit);
+
+        if ($operation === 'encrypt') {
+            $service->setData($data);
+            $startTime = microtime(true);
+            $service->encrypt();
+            $endTime = microtime(true);
+        } else {
+            $service->setData($data);
+            $encryptedData = $service->encrypt();
+            $service->setData($encryptedData);
+            $startTime = microtime(true);
+            $service->decrypt();
+            $endTime = microtime(true);
+        }
+        return ($endTime - $startTime) * 1000;
     }
 }

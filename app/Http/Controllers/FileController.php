@@ -86,27 +86,27 @@ class FileController extends Controller
         /**
      * Menampilkan halaman manajemen file.
      */
-    public function index()
+        public function index()
     {
         $user = auth()->user();
 
         // Admin bisa melihat semua file
         if (Gate::allows('is-admin')) {
-            $files = FileModel::with('uploader.division')->latest('tgl_upload')->get();
+            $query = FileModel::query();
         }
         // Master Divisi hanya melihat file dari user di divisinya
         elseif (Gate::allows('is-admin-or-master-divisi')) {
             // Ambil semua username dari user yang berada di divisi yang sama
             $usernamesInDivision = User::where('division_id', $user->division_id)->pluck('username');
-            $files = FileModel::whereIn('username', $usernamesInDivision)
-                        ->with('uploader.division')
-                        ->latest('tgl_upload')
-                        ->get();
+            $query = FileModel::whereIn('username', $usernamesInDivision);
         }
         // Jika bukan keduanya (misal: Master User), beri array kosong
         else {
-            $files = collect(); // Membuat koleksi kosong
+            $query = FileModel::where('username', '-----'); // Query yang pasti tidak mengembalikan hasil
         }
+
+        // Jalankan query dan kirim data ke view
+        $files = $query->orderBy('tgl_upload', 'desc')->get();
 
         return view('files.index', [
             'files' => $files,
