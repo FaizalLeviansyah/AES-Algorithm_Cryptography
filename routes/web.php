@@ -46,7 +46,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/logs/enkripsi', [FileController::class, 'showEncryptionLogs'])->name('logs.encryption');
     Route::get('/logs/dekripsi', [FileController::class, 'showDecryptionLogs'])->name('logs.decryption');
 
-
+    // Route untuk menampilkan halaman form dekripsi mandiri
+    Route::get('/dekripsi-mandiri', [FileController::class, 'showStandaloneDecryptForm'])->name('file.decrypt.standalone.create');
+    // Route untuk memproses file dan kunci dari form
+    Route::post('/dekripsi-mandiri', [FileController::class, 'processStandaloneDecrypt'])->name('file.decrypt.standalone.store');
 });
 
 require __DIR__.'/auth.php';

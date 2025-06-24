@@ -31,6 +31,14 @@
                     <x-nav-link :href="route('logs.decryption')" :active="request()->routeIs('logs.decryption')">
                         {{ __('Log Dekripsi') }}
                     </x-nav-link>
+                    {{-- ... versi standalone di halaman tersendiri ... --}}
+                    <x-nav-link :href="route('logs.decryption')" :active="request()->routeIs('logs.decryption')">
+                        {{ __('Log Dekripsi') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('file.decrypt.standalone.create')" :active="request()->routeIs('file.decrypt.standalone.create')">
+                        {{ __('Dekripsi Mandiri') }}
+                    </x-nav-link>
                 </div>
 
 

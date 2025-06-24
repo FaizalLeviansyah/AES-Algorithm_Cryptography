@@ -158,5 +158,48 @@ class FileController extends Controller
         return view('logs.decryption', ['logs' => $logs]);
     }
 
+    public function showStandaloneDecryptForm()
+{
+    return view('files.standalone-decrypt');
+}
 
+/**
+ * Memproses file terenkripsi yang di-upload untuk didekripsi.
+ */
+    public function processStandaloneDecrypt(Request $request)
+    {
+        // 1. Validasi input: harus ada file dan kunci
+        $validatedData = $request->validate([
+            'encrypted_file' => ['required', 'file'], // kita beri nama 'encrypted_file'
+            'key' => ['required', 'string'],
+            // Kita tidak tahu ukuran bit-nya, jadi kita coba keduanya
+        ]);
+
+        $encryptedContent = $request->file('encrypted_file')->get();
+        $key = $validatedData['key'];
+
+        // 2. Coba dekripsi dengan AES-256 terlebih dahulu
+        $encryptionService256 = new EncryptionService($key, '256');
+        $encryptionService256->setData($encryptedContent);
+        $decryptedContent = $encryptionService256->decrypt();
+
+        // 3. Jika gagal, coba dengan AES-128
+        if ($decryptedContent === false) {
+            $encryptionService128 = new EncryptionService($key, '128');
+            $encryptionService128->setData($encryptedContent);
+            $decryptedContent = $encryptionService128->decrypt();
+        }
+
+        // 4. Jika keduanya gagal, berarti kunci atau file salah
+        if ($decryptedContent === false) {
+            return back()->with('error', 'Dekripsi gagal! Pastikan file dan kunci yang Anda masukkan benar.');
+        }
+
+        // 5. Jika berhasil, kirim file untuk di-download
+        // Kita tidak tahu nama file aslinya, jadi kita beri nama generik
+        $originalFileName = 'decrypted_file_' . time();
+        return response()->streamDownload(function () use ($decryptedContent) {
+            echo $decryptedContent;
+        }, $originalFileName);
+    }
 }
