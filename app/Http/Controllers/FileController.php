@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use App\Models\File as FileModel;
 use App\Models\DecryptionLog;
+use App\Models\EncryptionLog;
+
 
 class FileController extends Controller
 {
@@ -53,7 +55,8 @@ class FileController extends Controller
         Storage::disk('private')->put($encryptedFileName, $encryptedContent);
 
         // 5. Simpan informasi file ke database
-        FileModel::create([
+        // 5. Simpan informasi file ke database
+        $newlyCreatedFile = FileModel::create([
             'file_name_source' => $originalFileName,
             'file_name_finish' => $encryptedFileName,
             'file_path' => $encryptedFileName,
@@ -65,8 +68,14 @@ class FileController extends Controller
             'bit' => $validatedData['bit'],
         ]);
 
-        // 6. Redirect ke halaman dashboard dengan pesan sukses
-        return redirect()->route('dashboard')->with('success', 'File berhasil dienkripsi!');
+        // 6. Catat aktivitas enkripsi ke dalam log
+        EncryptionLog::create([
+            'file_id' => $newlyCreatedFile->id_file,
+            'user_id' => Auth::id(),
+            'encrypted_at' => $newlyCreatedFile->tgl_upload,
+        ]);
+        // 7. Redirect ke halaman dashboard dengan pesan sukses
+        return redirect()->route('dashboard')->with('success', 'File berhasil dienkripsi dan log telah dicatat!');
 
         // Jika validasi berhasil, kode akan lanjut ke sini.
         // Jika gagal, Laravel akan otomatis kembali ke form dengan pesan error.
@@ -120,6 +129,15 @@ class FileController extends Controller
             return back()->with('error', 'Kunci yang Anda masukkan untuk file "' . $file->file_name_source . '" salah!');
         }
 
+                // ▼▼▼ TAMBAHKAN BLOK INI ▼▼▼
+        // Catat aktivitas dekripsi ke dalam log
+        DecryptionLog::create([
+            'file_id' => $file->id_file,
+            'user_id' => Auth::id(),
+            'decrypted_at' => now(),
+        ]);
+        // ▲▲▲ SELESAI ▲▲▲
+
         // (Nanti kita akan tambahkan pencatatan log di sini)
 
         // 6. Jika berhasil, langsung kirim file untuk di-download
@@ -127,4 +145,18 @@ class FileController extends Controller
             echo $decryptedContent;
         }, $file->file_name_source);
     }
+
+        public function showEncryptionLogs()
+    {
+        $logs = EncryptionLog::with(['file', 'user'])->latest('encrypted_at')->get();
+        return view('logs.encryption', ['logs' => $logs]);
+    }
+
+    public function showDecryptionLogs()
+    {
+        $logs = DecryptionLog::with(['file', 'user'])->latest('decrypted_at')->get();
+        return view('logs.decryption', ['logs' => $logs]);
+    }
+
+
 }
