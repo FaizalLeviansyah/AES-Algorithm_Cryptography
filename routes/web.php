@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/analisis-aes', [AnalysisController::class, 'index'])->name('analysis.aes')->middleware('can:is-admin');
     Route::post('/analisis-aes', [AnalysisController::class, 'performAnalysis'])->name('analysis.aes.perform')->middleware('can:is-admin');
+
 });
 
 require __DIR__.'/auth.php';
